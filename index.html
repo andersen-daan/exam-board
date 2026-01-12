@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>定期評量數位看板</title>
+    <style>
+        :root {
+            --bg-color: #EEF2E6; 
+            --card-bg: #FFFFFF;
+            --primary-color: #6B8E88; 
+            --text-main: #2C3E50; /* 字體加深 */
+            --text-light: #B0B0B0; /* 過去時段的顏色 */
+            --danger-color: #E07A5F; 
+            --clock-color: #2F3E46;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            background-color: var(--bg-color);
+            margin: 0; padding: 15px;
+            color: var(--text-main);
+            height: 100vh;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 登入遮罩 */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(238, 242, 230, 0.98);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 2000; transition: opacity 0.5s;
+        }
+        #loginOverlay.hidden { opacity: 0; pointer-events: none; }
+        
+        .login-box input {
+            padding: 15px; font-size: 28px; text-align: center;
+            border: 2px solid var(--primary-color); border-radius: 12px;
+            outline: none; width: 300px; letter-spacing: 2px;
+        }
+        .login-btn {
+            margin-top: 20px; padding: 10px 30px; font-size: 18px;
+            background: var(--primary-color); color: white; border: none;
+            border-radius: 8px; cursor: pointer;
+        }
+
+        /* 頂部標題列 */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 20px; background: var(--card-bg);
+            border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 15px; flex-shrink: 0;
+        }
+        h1 { margin: 0; font-size: 1.5rem; color: var(--primary-color); letter-spacing: 2px; }
+        .controls { display: flex; gap: 10px; align-items: center; }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.9rem; background: #eee; color: #666; }
+
+        /* 主畫面 Grid 佈局 */
+        #mainContainer {
+            display: grid;
+            grid-template-columns: 35% 65%; /* 左窄右寬 */
+            grid-template-rows: auto 1fr auto;
+            gap: 15px;
+            flex: 1;
+            height: 100%;
+        }
+
+        /* 卡片共用樣式 */
+        .card {
+            background: var(--card-bg); border-radius: 16px;
+            padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            position: relative; display: flex; flex-direction: column;
+            overflow: hidden; transition: all 0.5s ease;
+        }
+        .card-header {
+            font-size: 1.3rem; font-weight: bold; color: var(--primary-color);
+            margin-bottom: 15px; border-left: 5px solid var(--primary-color);
+            padding-left: 10px; display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* 按鈕樣式 */
+        .btn { padding: 6px 15px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+        .btn-edit { background: #eee; color: #555; }
+        .btn-save { background: var(--primary-color); color: white; }
+
+        /* 1. 時鐘區 (Clock) */
+        #clockCard { justify-content: center; align-items: center; text-align: center; }
+        #timeDisplay { font-family: 'Courier New', monospace; font-weight: bold; color: var(--clock-color); line-height: 1; }
+        #dateDisplay { font-size: 1.4rem; color: #888; margin-top: 10px; }
+        
+        #countdownArea {
+            width: 100%; margin-top: 20px; display: none; animation: fadeIn 0.5s;
+        }
+        .progress-container {
+            width: 100%; height: 30px; background-color: #eee;
+            border-radius: 15px; overflow: hidden; margin-top: 10px;
+        }
+        .progress-bar {
+            height: 100%; width: 100%; background-color: var(--danger-color);
+            transition: width 1s linear;
+        }
+        #countdownText {
+            font-size: 2rem; font-weight: bold; color: var(--danger-color); display: block;
+        }
+
+        /* 2. 考程表 (Schedule) */
+        #scheduleCard { overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        th { text-align: left; color: #666; border-bottom: 2px solid #eee; padding: 10px; }
+        td { padding: 12px 10px; border-bottom: 1px solid #f5f5f5; font-size: 1.1rem; color: var(--text-main); font-weight: bold;}
+        
+        /* 考程狀態樣式 */
+        tr.past-row td { color: var(--text-light); font-weight: normal; } /* 過去 */
+        tr.current-row { background-color: rgba(107, 142, 136, 0.15); border-left: 5px solid var(--primary-color); } /* 現在 */
+
+        /* 3. 公告區 (Info) */
+        #announcementContent {
+            white-space: pre-line; font-size: 1.3rem; line-height: 1.8; color: #444;
+            height: 100%; overflow-y: auto;
+        }
+        
+        /* 4. 出缺席 (Attendance) */
+        #attendanceCard {
+            grid-column: 1 / -1;
+            display: flex; justify-content: flex-start; align-items: center;
+            padding: 15px 30px; background: var(--primary-color); color: white;
+            position: relative; /* 給署名定位用 */
+        }
+        .att-group { display: flex; align-items: center; gap: 5px; margin-right: 30px; }
+        .att-label { font-size: 1.2rem; opacity: 0.9; }
+        .att-val { 
+            font-size: 1.8rem; font-weight: bold; width: 70px; text-align: center;
+            background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px;
+            padding: 5px;
+        }
+        .att-unit { font-size: 1rem; margin-left: 5px; }
+        #absentVal { width: 250px; text-align: left; padding-left: 10px; font-size: 1.5rem; }
+
+        /* 署名樣式 (在出缺席框內右下) */
+        .signature {
+            position: absolute; bottom: 8px; right: 15px;
+            font-size: 0.8rem; color: rgba(255,255,255,0.4);
+            font-weight: normal; letter-spacing: 1px;
+        }
+
+        /* ============ 模式切換邏輯 (您要求的互換) ============ */
+        
+        /* 考試模式 (Exam Mode) */
+        /* 要求：左邊時鐘(大)，右邊公告(小)，考程隱藏 */
+        body.mode-exam #mainContainer {
+            grid-template-columns: 60% 40%; /* 時鐘大一點 */
+            grid-template-areas: 
+                "clock info"
+                "clock info"
+                "att att";
+        }
+        body.mode-exam #clockCard { grid-area: clock; }
+        body.mode-exam #infoCard { grid-area: info; }
+        body.mode-exam #scheduleCard { display: none; }
+        body.mode-exam #attendanceCard { grid-area: att; }
+        body.mode-exam #timeDisplay { font-size: 13vw; } 
+
+        /* 自習模式 (Study Mode) */
+        /* 要求：左邊考程，右邊時鐘+公告(堆疊) */
+        body.mode-study #mainContainer {
+            grid-template-columns: 40% 60%;
+            grid-template-areas: 
+                "schedule clock"
+                "schedule info"
+                "att att";
+        }
+        body.mode-study #scheduleCard { grid-area: schedule; }
+        body.mode-study #clockCard { grid-area: clock; }
+        body.mode-study #infoCard { grid-area: info; }
+        body.mode-study #attendanceCard { grid-area: att; }
+        body.mode-study #timeDisplay { font-size: 5rem; }
+
+        /* 編輯器 Modal */
+        .modal {
+            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.5); z-index: 3000;
+            justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 15px; width: 600px;
+            max-height: 80vh; overflow-y: auto;
+        }
+        .edit-row { display: grid; grid-template-columns: 1fr 1fr 1.5fr 1fr auto; gap: 5px; margin-bottom: 10px; }
+        .edit-row input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%; }
+
+        .admin-only { display: none !important; }
+        body.role-admin .admin-only { display: inline-block !important; }
+        input:not(:read-only) { background: rgba(255,255,255,0.2); border: 1px dashed rgba(255,255,255,0.5); cursor: text; }
+        input:read-only { cursor: default; outline: none; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes blink { 50% { opacity: 0.5; } }
+        .urgent { animation: blink 1s infinite; color: var(--danger-color); }
+
+    </style>
+</head>
+<body class="mode-study">
+
+    <div id="loginOverlay">
+        <h2 style="color:var(--primary-color); margin-bottom:30px;">定期評量數位看板系統</h2>
+        <div class="login-box">
+            <input type="password" id="passInput" placeholder="身份驗證碼" onkeyup="if(event.key==='Enter') login()">
+            <br>
+            <div style="text-align: center;">
+                <button class="login-btn" onclick="login()">登入</button>
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <h1>定期評量數位看板</h1>
+        <div class="controls">
+            <span id="currentModeBadge" class="status-badge">載入中...</span>
+            <button class="btn btn-edit admin-only" onclick="toggleForceMode()">強制切換模式</button>
+            <button class="btn btn-edit" onclick="logout()" style="background:#e74c3c; color:white;">登出</button>
+        </div>
+    </header>
+
+    <div id="mainContainer">
+        <div class="card" id="infoCard">
+            <div class="card-header">
+                公告事項
+                <button class="btn btn-edit admin-only" onclick="editInfo()">✎ 編輯</button>
+            </div>
+            <div id="announcementContent">讀取中...</div>
+        </div>
+
+        <div class="card" id="scheduleCard">
+            <div class="card-header">
+                今日考程
+                <button class="btn btn-edit admin-only" onclick="openScheduleEditor()">✎ 編輯</button>
+            </div>
+            <table id="scheduleTable">
+                <thead><tr><th>時間</th><th>科目</th><th>備註</th></tr></thead>
+                <tbody id="scheduleBody"></tbody>
+            </table>
+        </div>
+
+        <div class="card" id="clockCard">
+            <div id="timeDisplay">00:00:00</div>
+            <div id="dateDisplay">--月--日 星期--</div>
+            
+            <div id="countdownArea">
+                <span id="countdownText">倒數 5 分鐘</span>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="attendanceCard">
+            <div class="att-group">
+                <span class="att-label">應到</span>
+                <input type="number" id="shouldVal" class="att-val admin-only-edit" value="37" readonly onchange="saveData()">
+                <span class="att-unit">人</span>
+            </div>
+            <div class="att-group">
+                <span class="att-label">實到</span>
+                <input type="number" id="actualVal" class="att-val" value="37" readonly onchange="saveData()">
+                <span class="att-unit">人</span>
+            </div>
+            <div class="att-group" style="flex:1;">
+                <span class="att-label">缺席座號</span>
+                <input type="text" id="absentVal" class="att-val" placeholder="無" readonly onchange="saveData()">
+            </div>
+            <div class="signature">大安高工陳吳煜老師製</div>
+        </div>
+    </div>
+
+    <div id="editorModal" class="modal">
+        <div class="modal-content">
+            <h3 style="color:var(--primary-color)">編輯考程</h3>
+            <div id="editorRows"></div>
+            <div style="margin-top:20px; text-align:right;">
+                <button class="btn" onclick="addEditorRow()" style="background:#eee;">+ 新增一節</button>
+                <button class="btn btn-save" onclick="saveScheduleFromEditor()">儲存</button>
+                <button class="btn" onclick="closeEditor()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === 關鍵設定：請在這裡填入 Google Sheets 的 CSV 連結 ===
+        // 稍後的教學會告訴你如何取得這個連結
+        const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQACAdB7m2Bb2uYz7aIHU5TdXo5254vD0lpaKBkkyw621OEPW0hzHMdcFa5isuUDotgbFq7GRFghl9c/pub?output=csv"; 
+
+        const PASSWORDS = { ADMIN: '1005', STUDENT: '1630' };
+        let currentUserRole = null;
+        let isForceMode = false;
+
+        const DEFAULT_ANNOUNCEMENT = `1. 請將手機及智慧型穿戴裝置關機並放置於手機袋。
+2. 書包請放置於教室前、後方走道。
+3. 桌子請轉向（抽屜朝向講桌）。
+4. 桌面僅留下必要的文具用品。
+5. 考試期間請勿交談。`;
+
+        const DEFAULT_SCHEDULE = [
+            { start: "08:10", end: "09:00", subject: "國語文", note: "開書考" },
+            { start: "09:10", end: "10:00", subject: "自習", note: "安靜自修" },
+            { start: "10:10", end: "11:00", subject: "數學", note: "帶圓規" },
+            { start: "11:10", end: "12:00", subject: "英語", note: "含英聽" }
+        ];
+
+        let appData = {
+            schedule: JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)),
+            announcement: DEFAULT_ANNOUNCEMENT,
+            attendance: { should: 37, actual: 37, absent: "" }
+        };
+
+        // 初始化
+        function init() {
+            // 如果有設定 Google Sheets URL，就嘗試從網路讀取
+            if(GOOGLE_SHEET_CSV_URL) {
+                fetchGoogleSheetData();
+                setInterval(fetchGoogleSheetData, 10000); // 每10秒同步一次
+            } else {
+                loadLocalData(); // 否則讀取本地儲存
+            }
+
+            updateClock();
+            setInterval(updateClock, 1000);
+            renderUI();
+            
+            const savedRole = sessionStorage.getItem('role');
+            if(savedRole) authSuccess(savedRole);
+        }
+
+        // 時間與顯示邏輯
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('timeDisplay').textContent = now.toLocaleTimeString('zh-TW', { hour12: false });
+            document.getElementById('dateDisplay').textContent = 
+                now.toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'long' });
+
+            if (!isForceMode) checkScheduleMode(now);
+            renderScheduleColor(now); // 更新考程顏色(過去變淡)
+        }
+
+        function checkScheduleMode(now) {
+            const nowTime = now.getHours() * 60 + now.getMinutes();
+            let isExamining = false;
+            let currentSubject = "";
+            let remainingSec = 0;
+
+            appData.schedule.forEach((item) => {
+                const [sH, sM] = item.start.split(':').map(Number);
+                const [eH, eM] = item.end.split(':').map(Number);
+                const startMin = sH * 60 + sM;
+                const endMin = eH * 60 + eM;
+
+                if (nowTime >= startMin && nowTime < endMin) {
+                    if (item.subject !== "自習" && item.subject !== "午休") {
+                        isExamining = true;
+                        currentSubject = item.subject;
+                        const endDate = new Date();
+                        endDate.setHours(eH, eM, 0);
+                        remainingSec = (endDate - now) / 1000;
+                    }
+                }
+            });
+
+            const body = document.body;
+            const badge = document.getElementById('currentModeBadge');
+
+            if (isExamining) {
+                body.classList.remove('mode-study');
+                body.classList.add('mode-exam');
+                badge.textContent = `考試中：${currentSubject}`;
+                handleCountdown(remainingSec);
+            } else {
+                body.classList.remove('mode-exam');
+                body.classList.add('mode-study');
+                badge.textContent = "自習/下課時段";
+                document.getElementById('countdownArea').style.display = 'none';
+            }
+        }
+
+        // 處理考程表顏色 (過去變淡)
+        function renderScheduleColor(now) {
+            const rows = document.querySelectorAll('#scheduleBody tr');
+            const nowTime = now.getHours() * 60 + now.getMinutes();
+
+            appData.schedule.forEach((item, index) => {
+                if(!rows[index]) return;
+                const [eH, eM] = item.end.split(':').map(Number);
+                const [sH, sM] = item.start.split(':').map(Number);
+                const endMin = eH * 60 + eM;
+                const startMin = sH * 60 + sM;
+
+                rows[index].className = ''; // 重置
+                if (nowTime >= endMin) {
+                    rows[index].classList.add('past-row'); // 考完變淡
+                } else if (nowTime >= startMin && nowTime < endMin) {
+                    rows[index].classList.add('current-row'); // 正在考
+                }
+            });
+        }
+
+        function handleCountdown(remainingSec) {
+            const area = document.getElementById('countdownArea');
+            const text = document.getElementById('countdownText');
+            const bar = document.getElementById('progressBar');
+
+            if (remainingSec <= 300 && remainingSec > 0) {
+                area.style.display = 'block';
+                const mins = Math.ceil(remainingSec / 60);
+                
+                if (mins > 1) {
+                    text.textContent = `倒數 ${mins} 分鐘`;
+                    text.classList.remove('urgent');
+                } else if (remainingSec > 10) {
+                    text.textContent = `倒數 1 分鐘`;
+                    text.classList.add('urgent');
+                } else {
+                    text.textContent = `準備交卷`;
+                }
+                const percent = (remainingSec / 300) * 100;
+                bar.style.width = `${percent}%`;
+            } else {
+                area.style.display = 'none';
+            }
+        }
+
+        // 登入功能
+        function login() {
+            const val = document.getElementById('passInput').value;
+            if (val === PASSWORDS.ADMIN) authSuccess('admin');
+            else if (val === PASSWORDS.STUDENT) authSuccess('student');
+            else { alert("驗證碼錯誤"); document.getElementById('passInput').value = ""; }
+        }
+
+        function authSuccess(role) {
+            currentUserRole = role;
+            sessionStorage.setItem('role', role);
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.body.classList.remove('role-admin', 'role-student');
+            document.body.classList.add(`role-${role}`);
+
+            const inputs = document.querySelectorAll('.att-val');
+            inputs.forEach(input => {
+                if(role === 'admin') input.removeAttribute('readonly');
+                else {
+                    if(input.id === 'shouldVal') input.setAttribute('readonly', true);
+                    else input.removeAttribute('readonly');
+                }
+            });
+        }
+
+        function logout() { sessionStorage.clear(); location.reload(); }
+        
+        function toggleForceMode() {
+            isForceMode = !isForceMode;
+            if(document.body.classList.contains('mode-exam')) {
+                document.body.classList.remove('mode-exam');
+                document.body.classList.add('mode-study');
+            } else {
+                document.body.classList.remove('mode-study');
+                document.body.classList.add('mode-exam');
+            }
+            document.getElementById('currentModeBadge').textContent = isForceMode ? "手動模式" : "自動模式";
+        }
+
+        // 畫面渲染
+        function renderUI() {
+            const tbody = document.getElementById('scheduleBody');
+            tbody.innerHTML = '';
+            appData.schedule.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${item.start}-${item.end}</td><td>${item.subject}</td><td>${item.note}</td>`;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('announcementContent').textContent = appData.announcement;
+            document.getElementById('shouldVal').value = appData.attendance.should;
+            document.getElementById('actualVal').value = appData.attendance.actual;
+            document.getElementById('absentVal').value = appData.attendance.absent;
+        }
+
+        // 編輯器邏輯
+        function editInfo() {
+            const newText = prompt("編輯公告內容", appData.announcement);
+            if(newText !== null) { appData.announcement = newText; saveData(); renderUI(); }
+        }
+        function openScheduleEditor() {
+            const container = document.getElementById('editorRows');
+            container.innerHTML = '';
+            appData.schedule.forEach(item => addEditorRow(item));
+            document.getElementById('editorModal').style.display = 'flex';
+        }
+        function addEditorRow(data = {start:'', end:'', subject:'', note:''}) {
+            const div = document.createElement('div');
+            div.className = 'edit-row';
+            div.innerHTML = `
+                <input type="time" class="e-start" value="${data.start}">
+                <input type="time" class="e-end" value="${data.end}">
+                <input type="text" class="e-sub" placeholder="科目" value="${data.subject}">
+                <input type="text" class="e-note" placeholder="備註" value="${data.note}">
+                <button onclick="this.parentElement.remove()" style="color:red; border:none; background:none;">✖</button>
+            `;
+            document.getElementById('editorRows').appendChild(div);
+        }
+        function saveScheduleFromEditor() {
+            const rows = document.querySelectorAll('.edit-row');
+            const newSchedule = [];
+            rows.forEach(row => {
+                const start = row.querySelector('.e-start').value;
+                const end = row.querySelector('.e-end').value;
+                const subject = row.querySelector('.e-sub').value;
+                const note = row.querySelector('.e-note').value;
+                if(start && end && subject) newSchedule.push({ start, end, subject, note });
+            });
+            newSchedule.sort((a, b) => a.start.localeCompare(b.start));
+            appData.schedule = newSchedule;
+            saveData();
+            renderUI();
+            closeEditor();
+        }
+        function closeEditor() { document.getElementById('editorModal').style.display = 'none'; }
+
+        // 資料存取 (Local Storage + Google Sheet Placeholder)
+        function saveData() {
+            appData.attendance.should = document.getElementById('shouldVal').value;
+            appData.attendance.actual = document.getElementById('actualVal').value;
+            appData.attendance.absent = document.getElementById('absentVal').value;
+            localStorage.setItem('examDashboardData', JSON.stringify(appData));
+        }
+        function loadLocalData() {
+            const saved = localStorage.getItem('examDashboardData');
+            if(saved) appData = JSON.parse(saved);
+        }
+
+        // === Google Sheets 串接邏輯 (讀取CSV) ===
+        // 這會覆蓋本地資料，實現遠端同步
+        function fetchGoogleSheetData() {
+            fetch(GOOGLE_SHEET_CSV_URL)
+            .then(response => response.text())
+            .then(csvText => {
+                // 解析 CSV 並更新 appData.schedule 和 appData.announcement
+                // 這裡的邏輯需要您按照下一段教學建立正確格式的 Sheet 才會生效
+                const rows = csvText.split('\n').map(row => row.split(','));
+                // 假設 CSV 結構：
+                // Row 1: 公告內容 (放在 A1)
+                // Row 2: 標題列 (Start, End, Subject, Note)
+                // Row 3+: 考程資料
+                
+                if(rows.length > 2) {
+                    // 更新公告 (注意 CSV 可能有逗號，這裡做簡易處理)
+                    const remoteAnnouncement = rows[0][0]; 
+                    if(remoteAnnouncement) appData.announcement = remoteAnnouncement.replace(/\\n/g, '\n');
+
+                    // 更新考程
+                    const newSchedule = [];
+                    for(let i=2; i<rows.length; i++) {
+                        const [start, end, subject, note] = rows[i];
+                        if(start && end && subject) {
+                            newSchedule.push({
+                                start: start.trim(),
+                                end: end.trim(),
+                                subject: subject.trim(),
+                                note: note ? note.trim() : ""
+                            });
+                        }
+                    }
+                    if(newSchedule.length > 0) {
+                        appData.schedule = newSchedule;
+                        renderUI();
+                        console.log("已從 Google Sheets 同步資料");
+                    }
+                }
+            })
+            .catch(err => console.error("Google Sheet 同步失敗:", err));
+        }
+
+        // 首次執行
+        init();
+    </script>
+</body>
+</html>
