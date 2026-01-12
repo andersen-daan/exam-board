@@ -9,8 +9,8 @@
             --bg-color: #EEF2E6; 
             --card-bg: #FFFFFF;
             --primary-color: #6B8E88; 
-            --text-main: #2C3E50; /* 字體加深 */
-            --text-light: #B0B0B0; /* 過去時段的顏色 */
+            --text-main: #2C3E50; 
+            --text-light: #B0B0B0;
             --danger-color: #E07A5F; 
             --clock-color: #2F3E46;
         }
@@ -20,11 +20,11 @@
         body {
             font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
             background-color: var(--bg-color);
-            margin: 0; padding: 15px;
+            margin: 0; padding: 10px; /* 縮小邊距 */
             color: var(--text-main);
             height: 100vh;
             display: flex; flex-direction: column;
-            overflow: hidden;
+            overflow: hidden; /* 禁止捲動 */
         }
 
         /* 登入遮罩 */
@@ -48,111 +48,116 @@
             border-radius: 8px; cursor: pointer;
         }
 
-        /* 頂部標題列 */
+        /* 頂部標題列 (變扁一點以節省空間) */
         header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 20px; background: var(--card-bg);
-            border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            margin-bottom: 15px; flex-shrink: 0;
+            padding: 8px 20px; background: var(--card-bg);
+            border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 10px; flex-shrink: 0;
         }
-        h1 { margin: 0; font-size: 1.5rem; color: var(--primary-color); letter-spacing: 2px; }
+        h1 { margin: 0; font-size: 1.4rem; color: var(--primary-color); letter-spacing: 2px; }
         .controls { display: flex; gap: 10px; align-items: center; }
-        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.9rem; background: #eee; color: #666; }
+        .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 0.85rem; background: #eee; color: #666; }
 
-        /* 主畫面 Grid 佈局 */
+        /* 主畫面 Grid 佈局 - 改良版 */
         #mainContainer {
             display: grid;
-            grid-template-columns: 35% 65%; /* 左窄右寬 */
-            grid-template-rows: auto 1fr auto;
-            gap: 15px;
+            grid-template-columns: 35% 65%;
+            grid-template-rows: auto 1fr auto; /* 讓中間自動彈性，底部自動 */
+            gap: 10px; /* 縮小間隙 */
             flex: 1;
             height: 100%;
+            min-height: 0; /* 防止 Grid 內容撐破容器 */
         }
 
         /* 卡片共用樣式 */
         .card {
-            background: var(--card-bg); border-radius: 16px;
-            padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            background: var(--card-bg); border-radius: 12px;
+            padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
             position: relative; display: flex; flex-direction: column;
             overflow: hidden; transition: all 0.5s ease;
         }
         .card-header {
-            font-size: 1.3rem; font-weight: bold; color: var(--primary-color);
-            margin-bottom: 15px; border-left: 5px solid var(--primary-color);
-            padding-left: 10px; display: flex; justify-content: space-between; align-items: center;
+            font-size: 1.2rem; font-weight: bold; color: var(--primary-color);
+            margin-bottom: 10px; border-left: 4px solid var(--primary-color);
+            padding-left: 8px; display: flex; justify-content: space-between; align-items: center;
+            flex-shrink: 0;
         }
 
         /* 按鈕樣式 */
-        .btn { padding: 6px 15px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+        .btn { padding: 4px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
         .btn-edit { background: #eee; color: #555; }
         .btn-save { background: var(--primary-color); color: white; }
 
         /* 1. 時鐘區 (Clock) */
         #clockCard { justify-content: center; align-items: center; text-align: center; }
-        #timeDisplay { font-family: 'Courier New', monospace; font-weight: bold; color: var(--clock-color); line-height: 1; }
-        #dateDisplay { font-size: 1.4rem; color: #888; margin-top: 10px; }
+        
+        /* 使用 clamp 限制字體最大值，避免在大螢幕上過大 */
+        #timeDisplay { 
+            font-family: 'Courier New', monospace; font-weight: bold; 
+            color: var(--clock-color); line-height: 1; 
+        }
+        #dateDisplay { font-size: 1.2rem; color: #888; margin-top: 5px; }
         
         #countdownArea {
-            width: 100%; margin-top: 20px; display: none; animation: fadeIn 0.5s;
+            width: 100%; margin-top: 15px; display: none; animation: fadeIn 0.5s;
         }
         .progress-container {
-            width: 100%; height: 30px; background-color: #eee;
-            border-radius: 15px; overflow: hidden; margin-top: 10px;
+            width: 100%; height: 20px; background-color: #eee;
+            border-radius: 10px; overflow: hidden; margin-top: 8px;
         }
         .progress-bar {
             height: 100%; width: 100%; background-color: var(--danger-color);
             transition: width 1s linear;
         }
         #countdownText {
-            font-size: 2rem; font-weight: bold; color: var(--danger-color); display: block;
+            font-size: 1.5rem; font-weight: bold; color: var(--danger-color); display: block;
         }
 
         /* 2. 考程表 (Schedule) */
         #scheduleCard { overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-        th { text-align: left; color: #666; border-bottom: 2px solid #eee; padding: 10px; }
-        td { padding: 12px 10px; border-bottom: 1px solid #f5f5f5; font-size: 1.1rem; color: var(--text-main); font-weight: bold;}
+        table { width: 100%; border-collapse: collapse; margin-top: 0; }
+        th { text-align: left; color: #666; border-bottom: 2px solid #eee; padding: 8px; font-size: 0.9rem; position: sticky; top: 0; background: white;}
+        td { padding: 10px 8px; border-bottom: 1px solid #f5f5f5; font-size: 1rem; color: var(--text-main); font-weight: bold;}
         
-        /* 考程狀態樣式 */
-        tr.past-row td { color: var(--text-light); font-weight: normal; } /* 過去 */
-        tr.current-row { background-color: rgba(107, 142, 136, 0.15); border-left: 5px solid var(--primary-color); } /* 現在 */
+        tr.past-row td { color: var(--text-light); font-weight: normal; }
+        tr.current-row { background-color: rgba(107, 142, 136, 0.15); border-left: 4px solid var(--primary-color); }
 
         /* 3. 公告區 (Info) */
         #announcementContent {
-            white-space: pre-line; font-size: 1.3rem; line-height: 1.8; color: #444;
+            white-space: pre-line; font-size: 1.2rem; line-height: 1.6; color: #444;
             height: 100%; overflow-y: auto;
         }
         
-        /* 4. 出缺席 (Attendance) */
+        /* 4. 出缺席 (Attendance) - 底部區 */
         #attendanceCard {
             grid-column: 1 / -1;
             display: flex; justify-content: flex-start; align-items: center;
-            padding: 15px 30px; background: var(--primary-color); color: white;
-            position: relative; /* 給署名定位用 */
+            padding: 10px 20px; background: var(--primary-color); color: white;
+            position: relative;
+            min-height: 80px; /* 固定高度以免被壓縮 */
         }
-        .att-group { display: flex; align-items: center; gap: 5px; margin-right: 30px; }
-        .att-label { font-size: 1.2rem; opacity: 0.9; }
+        .att-group { display: flex; align-items: center; gap: 5px; margin-right: 25px; }
+        .att-label { font-size: 1.1rem; opacity: 0.9; }
         .att-val { 
-            font-size: 1.8rem; font-weight: bold; width: 70px; text-align: center;
+            font-size: 1.6rem; font-weight: bold; width: 60px; text-align: center;
             background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px;
-            padding: 5px;
+            padding: 2px;
         }
-        .att-unit { font-size: 1rem; margin-left: 5px; }
-        #absentVal { width: 250px; text-align: left; padding-left: 10px; font-size: 1.5rem; }
+        .att-unit { font-size: 0.9rem; margin-left: 3px; }
+        #absentVal { width: 250px; text-align: left; padding-left: 10px; font-size: 1.4rem; }
 
-        /* 署名樣式 (在出缺席框內右下) */
         .signature {
             position: absolute; bottom: 8px; right: 15px;
-            font-size: 0.8rem; color: rgba(255,255,255,0.4);
+            font-size: 0.75rem; color: rgba(255,255,255,0.4);
             font-weight: normal; letter-spacing: 1px;
         }
 
-        /* ============ 模式切換邏輯 (您要求的互換) ============ */
+        /* ============ 模式切換邏輯 (修正版面比例) ============ */
         
-        /* 考試模式 (Exam Mode) */
-        /* 要求：左邊時鐘(大)，右邊公告(小)，考程隱藏 */
+        /* 考試模式：左時鐘(大)，右公告(小) */
         body.mode-exam #mainContainer {
-            grid-template-columns: 60% 40%; /* 時鐘大一點 */
+            grid-template-columns: 60% 40%;
             grid-template-areas: 
                 "clock info"
                 "clock info"
@@ -162,10 +167,10 @@
         body.mode-exam #infoCard { grid-area: info; }
         body.mode-exam #scheduleCard { display: none; }
         body.mode-exam #attendanceCard { grid-area: att; }
-        body.mode-exam #timeDisplay { font-size: 13vw; } 
+        /* 使用 clamp(最小, 理想, 最大) 避免過大 */
+        body.mode-exam #timeDisplay { font-size: clamp(4rem, 18vw, 12rem); } 
 
-        /* 自習模式 (Study Mode) */
-        /* 要求：左邊考程，右邊時鐘+公告(堆疊) */
+        /* 自習模式：左考程，右時鐘+公告 */
         body.mode-study #mainContainer {
             grid-template-columns: 40% 60%;
             grid-template-areas: 
@@ -177,9 +182,9 @@
         body.mode-study #clockCard { grid-area: clock; }
         body.mode-study #infoCard { grid-area: info; }
         body.mode-study #attendanceCard { grid-area: att; }
-        body.mode-study #timeDisplay { font-size: 5rem; }
+        body.mode-study #timeDisplay { font-size: clamp(3rem, 6vw, 6rem); }
 
-        /* 編輯器 Modal */
+        /* Helper Classes */
         .modal {
             display: none; position: fixed; top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.5); z-index: 3000;
@@ -289,8 +294,7 @@
     </div>
 
     <script>
-        // === 關鍵設定：請在這裡填入 Google Sheets 的 CSV 連結 ===
-        // 稍後的教學會告訴你如何取得這個連結
+        // === 請在引號內貼上您的 Google Sheet CSV 連結 ===
         const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQACAdB7m2Bb2uYz7aIHU5TdXo5254vD0lpaKBkkyw621OEPW0hzHMdcFa5isuUDotgbFq7GRFghl9c/pub?output=csv"; 
 
         const PASSWORDS = { ADMIN: '1005', STUDENT: '1630' };
@@ -316,25 +320,23 @@
             attendance: { should: 37, actual: 37, absent: "" }
         };
 
-        // 初始化
         function init() {
-            // 如果有設定 Google Sheets URL，就嘗試從網路讀取
             if(GOOGLE_SHEET_CSV_URL) {
                 fetchGoogleSheetData();
-                setInterval(fetchGoogleSheetData, 10000); // 每10秒同步一次
+                setInterval(fetchGoogleSheetData, 10000);
             } else {
-                loadLocalData(); // 否則讀取本地儲存
+                loadLocalData();
             }
 
             updateClock();
             setInterval(updateClock, 1000);
             renderUI();
             
-            const savedRole = sessionStorage.getItem('role');
+            // 改為使用 localStorage 讀取權限 (重開機也不會登出)
+            const savedRole = localStorage.getItem('role');
             if(savedRole) authSuccess(savedRole);
         }
 
-        // 時間與顯示邏輯
         function updateClock() {
             const now = new Date();
             document.getElementById('timeDisplay').textContent = now.toLocaleTimeString('zh-TW', { hour12: false });
@@ -342,7 +344,7 @@
                 now.toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'long' });
 
             if (!isForceMode) checkScheduleMode(now);
-            renderScheduleColor(now); // 更新考程顏色(過去變淡)
+            renderScheduleColor(now);
         }
 
         function checkScheduleMode(now) {
@@ -372,6 +374,8 @@
             const badge = document.getElementById('currentModeBadge');
 
             if (isExamining) {
+                body.classList.remove('mode-exam'); // 確保切換動畫
+                void body.offsetWidth; // 觸發 reflow
                 body.classList.remove('mode-study');
                 body.classList.add('mode-exam');
                 badge.textContent = `考試中：${currentSubject}`;
@@ -384,7 +388,6 @@
             }
         }
 
-        // 處理考程表顏色 (過去變淡)
         function renderScheduleColor(now) {
             const rows = document.querySelectorAll('#scheduleBody tr');
             const nowTime = now.getHours() * 60 + now.getMinutes();
@@ -396,11 +399,11 @@
                 const endMin = eH * 60 + eM;
                 const startMin = sH * 60 + sM;
 
-                rows[index].className = ''; // 重置
+                rows[index].className = ''; 
                 if (nowTime >= endMin) {
-                    rows[index].classList.add('past-row'); // 考完變淡
+                    rows[index].classList.add('past-row'); 
                 } else if (nowTime >= startMin && nowTime < endMin) {
-                    rows[index].classList.add('current-row'); // 正在考
+                    rows[index].classList.add('current-row');
                 }
             });
         }
@@ -430,7 +433,6 @@
             }
         }
 
-        // 登入功能
         function login() {
             const val = document.getElementById('passInput').value;
             if (val === PASSWORDS.ADMIN) authSuccess('admin');
@@ -440,7 +442,8 @@
 
         function authSuccess(role) {
             currentUserRole = role;
-            sessionStorage.setItem('role', role);
+            // 改用 localStorage，永久保持登入
+            localStorage.setItem('role', role);
             document.getElementById('loginOverlay').classList.add('hidden');
             document.body.classList.remove('role-admin', 'role-student');
             document.body.classList.add(`role-${role}`);
@@ -455,7 +458,10 @@
             });
         }
 
-        function logout() { sessionStorage.clear(); location.reload(); }
+        function logout() { 
+            localStorage.removeItem('role'); // 登出時才清除
+            location.reload(); 
+        }
         
         function toggleForceMode() {
             isForceMode = !isForceMode;
@@ -469,7 +475,6 @@
             document.getElementById('currentModeBadge').textContent = isForceMode ? "手動模式" : "自動模式";
         }
 
-        // 畫面渲染
         function renderUI() {
             const tbody = document.getElementById('scheduleBody');
             tbody.innerHTML = '';
@@ -484,7 +489,6 @@
             document.getElementById('absentVal').value = appData.attendance.absent;
         }
 
-        // 編輯器邏輯
         function editInfo() {
             const newText = prompt("編輯公告內容", appData.announcement);
             if(newText !== null) { appData.announcement = newText; saveData(); renderUI(); }
@@ -525,7 +529,6 @@
         }
         function closeEditor() { document.getElementById('editorModal').style.display = 'none'; }
 
-        // 資料存取 (Local Storage + Google Sheet Placeholder)
         function saveData() {
             appData.attendance.should = document.getElementById('shouldVal').value;
             appData.attendance.actual = document.getElementById('actualVal').value;
@@ -537,29 +540,27 @@
             if(saved) appData = JSON.parse(saved);
         }
 
-        // === Google Sheets 串接邏輯 (讀取CSV) ===
-        // 這會覆蓋本地資料，實現遠端同步
+        // CSV 資料同步邏輯 (已修正標題列問題)
         function fetchGoogleSheetData() {
             fetch(GOOGLE_SHEET_CSV_URL)
             .then(response => response.text())
             .then(csvText => {
-                // 解析 CSV 並更新 appData.schedule 和 appData.announcement
-                // 這裡的邏輯需要您按照下一段教學建立正確格式的 Sheet 才會生效
                 const rows = csvText.split('\n').map(row => row.split(','));
-                // 假設 CSV 結構：
-                // Row 1: 公告內容 (放在 A1)
-                // Row 2: 標題列 (Start, End, Subject, Note)
-                // Row 3+: 考程資料
                 
                 if(rows.length > 2) {
-                    // 更新公告 (注意 CSV 可能有逗號，這裡做簡易處理)
                     const remoteAnnouncement = rows[0][0]; 
                     if(remoteAnnouncement) appData.announcement = remoteAnnouncement.replace(/\\n/g, '\n');
 
-                    // 更新考程
                     const newSchedule = [];
-                    for(let i=2; i<rows.length; i++) {
+                    // 從第 2 列開始跑迴圈，但加入判斷
+                    for(let i=1; i<rows.length; i++) {
                         const [start, end, subject, note] = rows[i];
+                        
+                        // 修正2：過濾掉標題列 (如果欄位含有 "Start" 或 "Subject" 則跳過)
+                        if (!start || start.toLowerCase().includes("start") || subject.toLowerCase().includes("subject")) {
+                            continue;
+                        }
+
                         if(start && end && subject) {
                             newSchedule.push({
                                 start: start.trim(),
@@ -572,14 +573,12 @@
                     if(newSchedule.length > 0) {
                         appData.schedule = newSchedule;
                         renderUI();
-                        console.log("已從 Google Sheets 同步資料");
                     }
                 }
             })
             .catch(err => console.error("Google Sheet 同步失敗:", err));
         }
 
-        // 首次執行
         init();
     </script>
 </body>
