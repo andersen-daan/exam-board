@@ -21,7 +21,6 @@
             font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
             background-color: var(--bg-color);
             margin: 0; 
-            /* [修正] 縮小邊距，讓內容往上擠 */
             padding: 10px; 
             color: var(--text-main);
             height: 100vh;
@@ -50,18 +49,17 @@
             border-radius: 8px; cursor: pointer;
         }
 
-        /* 頂部標題列 */
+        /* 頂部標題列 (高度壓縮) */
         header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 5px 15px; background: var(--card-bg);
             border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            /* [修正] 縮小下方間距 */
             margin-bottom: 8px; 
             flex-shrink: 0;
-            height: 55px; /* 稍微變矮 */
+            height: 50px; /* 設定更小高度 */
         }
-        h1 { margin: 0; font-size: 1.3rem; color: var(--primary-color); letter-spacing: 2px; }
-        .controls { display: flex; gap: 10px; align-items: center; }
+        h1 { margin: 0; font-size: 1.2rem; color: var(--primary-color); letter-spacing: 2px; }
+        .controls { display: flex; gap: 8px; align-items: center; }
         .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; background: #eee; color: #666; }
         #syncStatus { width: 10px; height: 10px; border-radius: 50%; background: #ccc; display: inline-block; margin-right: 5px; }
         #syncStatus.active { background: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
@@ -70,11 +68,9 @@
         #mainContainer {
             display: flex;
             flex-direction: row; 
-            /* [修正] 縮小欄位間距 */
             gap: 10px;
-            flex: 1; 
-            min-height: 0; 
-            /* [修正] 縮小與底部出缺席的距離 */
+            flex: 1; /* 自動填滿剩餘高度 */
+            min-height: 0; /* 重要：防止溢出 */
             margin-bottom: 8px;
         }
 
@@ -82,7 +78,7 @@
         .left-column {
             display: flex;
             flex-direction: column;
-            gap: 10px; /* 卡片間距 */
+            gap: 10px; 
         }
 
         /* 右側欄位容器 */
@@ -94,7 +90,7 @@
         /* 卡片共用樣式 */
         .card {
             background: var(--card-bg); border-radius: 12px;
-            padding: 12px; /* 稍微縮小內距 */
+            padding: 10px; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.03);
             position: relative; display: flex; flex-direction: column;
             overflow: hidden; 
@@ -120,6 +116,7 @@
             font-family: 'Courier New', monospace; font-weight: bold; 
             color: var(--clock-color); line-height: 1; 
             white-space: nowrap;
+            /* 字體大小在下方的 Media Queries 設定 */
         }
         #dateDisplay { font-size: 1.1rem; color: #888; margin-top: 5px; }
         
@@ -159,42 +156,59 @@
         tr.past-row td { color: var(--text-light); font-weight: normal; }
         tr.current-row { background-color: rgba(107, 142, 136, 0.15); border-left: 4px solid var(--primary-color); }
 
-        /* 4. 出缺席區 (獨立底部列) */
+        /* 4. 出缺席區 (Layout 重整) */
         #attendanceCard {
-            height: 65px; /* 稍微變矮 */
-            display: flex; justify-content: flex-start; align-items: center;
-            padding: 5px 20px; background: var(--primary-color); color: white;
+            height: 60px; /* 固定且較矮的高度 */
+            display: flex; justify-content: space-between; align-items: center; /* 左右分開 */
+            padding: 5px 15px; background: var(--primary-color); color: white;
             position: relative; 
             border-radius: 12px;
             flex-shrink: 0;
         }
-        .att-group { display: flex; align-items: center; gap: 5px; margin-right: 35px; }
+        
+        /* 左半部：應到 + 實到 */
+        .att-left-section {
+            display: flex; align-items: center; gap: 15px;
+        }
+        
+        .att-group { display: flex; align-items: center; gap: 5px; }
         .att-label { font-size: 1.1rem; opacity: 0.9; }
         .att-val { 
             font-size: 1.6rem; font-weight: bold; width: 60px; text-align: center;
             background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px;
             padding: 0px;
         }
-        .att-unit { font-size: 0.9rem; margin-left: 3px; }
-        #absentVal { width: 300px; text-align: left; padding-left: 10px; font-size: 1.3rem; }
-        .signature {
-            position: absolute; bottom: 8px; right: 15px;
-            font-size: 0.75rem; color: rgba(255,255,255,0.4); font-weight: normal; letter-spacing: 1px;
+        .att-unit { font-size: 0.9rem; margin-left: 2px; }
+        
+        /* 分隔線 */
+        .att-divider { width: 2px; height: 30px; background: rgba(255,255,255,0.3); }
+
+        /* 右半部：缺席座號 */
+        .att-right-section {
+            display: flex; align-items: center; flex: 1; justify-content: flex-end; gap: 10px;
+        }
+        #absentVal { 
+            width: 100%; max-width: 400px; text-align: left; padding-left: 10px; font-size: 1.3rem; 
+            background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px; height: 40px;
         }
 
-        /* ============ 模式切換邏輯 ============ */
+        .signature {
+            position: absolute; bottom: 4px; right: 8px;
+            font-size: 0.65rem; color: rgba(255,255,255,0.4); font-weight: normal; letter-spacing: 1px;
+        }
+
+        /* ============ 模式切換與字體控制 ============ */
         
         /* === 自習模式 (Study Mode) === */
-        /* [修正] 左右等寬 50% */
-        body.mode-study .left-column { width: 50%; display: flex; }
-        body.mode-study .right-column { width: 50%; display: flex; }
+        body.mode-study .left-column { width: 50%; }
+        body.mode-study .right-column { width: 50%; }
         body.mode-study #clockCard { height: auto; padding: 10px; }
         
-        /* 自習時鐘字體 */
-        body.mode-study #timeDisplay { font-size: min(10vw, 4.5rem); }
+        /* [修正] 自習時鐘字體：改為 5vw (寬度的5%)，確保 8 個字不會超過 40-50% 的寬度 */
+        /* 計算：5vw * 8字 = 40vw < 50vw (安全) */
+        body.mode-study #timeDisplay { font-size: 5vw; }
 
         /* === 考試模式 (Exam Mode) === */
-        /* 左欄 65% (大時鐘)，右欄 35% (公告) */
         body.mode-exam .left-column { width: 65%; }
         body.mode-exam .right-column { width: 35%; }
         
@@ -203,8 +217,11 @@
         body.mode-exam #scheduleCard { display: none; }
         body.mode-exam #timeDisclaimer { display: block; } 
         
-        /* 考試時鐘字體 */
-        body.mode-exam #timeDisplay { font-size: min(18vw, 25vh); }
+        /* [修正] 考試時鐘字體：改為 11vw */
+        /* 計算：11vw * 8字 = 88vw > 65vw ??? 不對，字體寬度通常是 font-size 的 0.6 倍 */
+        /* 11vw * 0.6 * 8 = 52.8vw < 65vw (安全) */
+        body.mode-exam #timeDisplay { font-size: 11vw; }
+        
         body.mode-exam #dateDisplay { font-size: 1.8rem; font-weight: bold; margin-top: 15px; color: var(--primary-color); }
 
         /* Helpers */
@@ -289,20 +306,25 @@
     </div>
 
     <div class="card" id="attendanceCard">
-        <div class="att-group">
-            <span class="att-label">應到</span>
-            <input type="number" id="shouldVal" class="att-val admin-only-edit" value="37" readonly onchange="saveData()">
-            <span class="att-unit">人</span>
+        <div class="att-left-section">
+            <div class="att-group">
+                <span class="att-label">應到</span>
+                <input type="number" id="shouldVal" class="att-val admin-only-edit" value="37" readonly onchange="saveData()">
+                <span class="att-unit">人</span>
+            </div>
+            <div class="att-divider"></div>
+            <div class="att-group">
+                <span class="att-label">實到</span>
+                <input type="number" id="actualVal" class="att-val" value="37" readonly onchange="saveData()">
+                <span class="att-unit">人</span>
+            </div>
         </div>
-        <div class="att-group">
-            <span class="att-label">實到</span>
-            <input type="number" id="actualVal" class="att-val" value="37" readonly onchange="saveData()">
-            <span class="att-unit">人</span>
-        </div>
-        <div class="att-group" style="flex:1;">
+        
+        <div class="att-right-section">
             <span class="att-label">缺席座號</span>
-            <input type="text" id="absentVal" class="att-val" placeholder="無" readonly onchange="saveData()">
+            <input type="text" id="absentVal" placeholder="無" readonly onchange="saveData()">
         </div>
+        
         <div class="signature">大安高工陳吳煜老師製</div>
     </div>
 
@@ -324,7 +346,6 @@
         let currentUserRole = null;
         let isForceMode = false;
         
-        // [修正] 預設公告內容 (無空行)
         const DEFAULT_ANNOUNCEMENT = `考試期間請遵守以下規定：
 1. 請將手機及智慧型穿戴裝置關機並放置於手機袋。
 2. 書包請放置於教室前、後方走道。
@@ -402,7 +423,6 @@
                 if(!body.classList.contains('mode-exam')) {
                     body.classList.remove('mode-study');
                     body.classList.add('mode-exam');
-                    // 考試模式：將公告移至右欄
                     colRight.appendChild(infoCard);
                     infoCard.style.display = 'flex'; 
                     infoCard.style.height = '100%'; 
@@ -413,7 +433,6 @@
                 if(!body.classList.contains('mode-study')) {
                     body.classList.remove('mode-exam');
                     body.classList.add('mode-study');
-                    // 自習模式：將公告移回左欄
                     colLeft.appendChild(infoCard);
                 }
                 badge.textContent = "自習/下課時段";
