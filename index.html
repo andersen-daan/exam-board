@@ -21,16 +21,11 @@
             font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
             background-color: var(--bg-color);
             margin: 0; 
-            padding: 15px;
+            padding: 15px; 
             color: var(--text-main);
-            
-            /* [修正1] 強制固定佈局，像 App 一樣釘在視窗上，解決大屏捲動問題 */
             position: fixed; 
             top: 0; left: 0; right: 0; bottom: 0;
-            
-            /* 高度由 JS 動態控制，預設 100% */
             height: 100%; 
-            
             display: flex; flex-direction: column;
             overflow: hidden; 
         }
@@ -59,23 +54,17 @@
         /* 頂部標題列 */
         header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 0 15px; /* 移除上下 padding，改用 flex 置中 */
+            padding: 0 15px;
             background: var(--card-bg);
             border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             margin-bottom: 8px; 
             flex-shrink: 0;
-            height: 50px; /* 固定高度 */
+            height: 50px;
         }
-        
-        /* [修正2] 標題加大，並垂直置中 */
         h1 { 
-            margin: 0; 
-            font-size: 1.6rem; /* 比公告大一點 */
-            color: var(--primary-color); 
-            letter-spacing: 2px; 
-            line-height: 50px; /* 與 Header 等高，保證置中不佔空間 */
+            margin: 0; font-size: 1.6rem; color: var(--primary-color); 
+            letter-spacing: 2px; line-height: 50px; 
         }
-        
         .controls { display: flex; gap: 8px; align-items: center; }
         .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; background: #eee; color: #666; }
         #syncStatus { width: 10px; height: 10px; border-radius: 50%; background: #ccc; display: inline-block; margin-right: 5px; }
@@ -88,39 +77,25 @@
             gap: 12px;
             flex: 1; 
             min-height: 0; 
-            margin-bottom: 15px; /* 這裡的邊距要保留，給下方綠框空間 */
+            margin-bottom: 15px; 
         }
 
-        /* 左側欄位容器 */
-        .left-column {
-            display: flex;
-            flex-direction: column;
-            gap: 12px; 
-            height: 100%;
-            overflow: hidden;
+        .left-column, .right-column {
+            display: flex; flex-direction: column;
+            height: 100%; overflow: hidden;
         }
-
-        /* 右側欄位容器 */
-        .right-column {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            overflow: hidden;
-        }
+        .left-column { gap: 12px; }
 
         /* 卡片共用樣式 */
         .card {
             background: var(--card-bg); border-radius: 12px;
-            padding: 12px; 
+            padding: 10px; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.03);
             position: relative; display: flex; flex-direction: column;
             overflow: hidden; 
         }
-        
-        /* [修正2] 卡片標題字體調整 */
         .card-header {
-            font-size: 1.3rem; /* 與內文一致 */
-            font-weight: bold; color: var(--primary-color);
+            font-size: 1.3rem; font-weight: bold; color: var(--primary-color);
             margin-bottom: 5px; border-left: 4px solid var(--primary-color);
             padding-left: 8px; display: flex; justify-content: space-between; align-items: center;
             flex-shrink: 0;
@@ -133,80 +108,67 @@
         /* 1. 時鐘區 */
         #clockCard { 
             justify-content: center; align-items: center; text-align: center;
-            flex-shrink: 0; 
-            position: relative;
+            flex-shrink: 0; position: relative; min-height: 120px;
         }
-        
         #timeDisplay { 
             font-family: 'Courier New', monospace; font-weight: bold; 
-            color: var(--clock-color); line-height: 1; 
-            white-space: nowrap;
+            color: var(--clock-color); line-height: 1; white-space: nowrap;
         }
-        
-        #dateDisplay { 
-            font-size: 1.8rem; font-weight: bold; margin-top: 10px; 
-            color: var(--primary-color); 
-        }
-        
+        #dateDisplay { font-size: 1.8rem; font-weight: bold; margin-top: 5px; color: var(--primary-color); }
         #timeDisclaimer {
-            position: absolute; bottom: 8px; right: 12px;
+            position: absolute; bottom: 5px; right: 10px;
             font-size: 1rem; color: #444; display: none; font-weight: bold; text-align: right;
         }
-
         #countdownArea { width: 100%; margin-top: 5px; display: none; }
         .progress-container { width: 100%; height: 15px; background-color: #eee; border-radius: 12px; overflow: hidden; margin-top: 5px; }
         .progress-bar { height: 100%; width: 100%; background-color: var(--danger-color); transition: width 1s linear; }
         #countdownText { font-size: 1.3rem; font-weight: bold; color: var(--danger-color); display: block; }
 
         /* 2. 公告區 */
-        #infoCard { 
-            flex: 1; 
-            min-height: 0; 
-        }
-        
-        /* [修正2] 公告內文字體調整 */
+        #infoCard { flex: 1; min-height: 0; }
         #announcementContent {
-            white-space: pre-line; 
-            font-size: 1.3rem; /* 與標題一致 */
-            line-height: 1.4; color: #444;
-            overflow-y: auto; flex: 1;
+            white-space: pre-line; font-size: 1.3rem; line-height: 1.4; color: #444;
+            overflow-y: auto; flex: 1; padding-right: 5px;
         }
         #hurryImageContainer {
-            margin-top: 5px; display: none; justify-content: center; align-items: center;
-            height: 40%; 
+            margin-top: 5px; display: none; justify-content: center; align-items: center; height: 40%; 
         }
         #hurryImage { max-height: 100%; max-width: 100%; border-radius: 12px; object-fit: contain; }
 
         /* 3. 考程表區 */
-        #scheduleCard { 
-            height: 100%; 
-        }
+        #scheduleCard { height: 100%; min-height: 0; }
         table { width: 100%; border-collapse: collapse; margin-top: 0; }
         th { text-align: left; color: #666; border-bottom: 2px solid #eee; padding: 6px; font-size: 0.9rem; position: sticky; top: 0; background: white;}
         td { padding: 10px 6px; border-bottom: 1px solid #f5f5f5; font-size: 1.05rem; color: var(--text-main); font-weight: bold;}
         tr.past-row td { color: var(--text-light); font-weight: normal; }
         tr.current-row { background-color: rgba(107, 142, 136, 0.15); border-left: 4px solid var(--primary-color); }
 
-        /* 4. 出缺席區 */
+        /* 4. 出缺席區 (Layout 修正) */
         #attendanceCard {
-            height: 130px; 
+            height: 140px; 
+            flex-shrink: 0; 
             display: flex; flex-direction: column; justify-content: center; 
-            padding: 10px 25px; background: var(--primary-color); color: white;
+            padding: 5px 25px; 
+            background: var(--primary-color); color: white;
             position: relative; 
             border-radius: 12px;
-            flex-shrink: 0;
-            gap: 15px; 
-            /* [修正] 確保它總是位於底部可見區域 */
-            margin-bottom: 0; 
+            gap: 10px; 
+            z-index: 10;
         }
         
+        /* [修正1] 使用 space-evenly 讓它們自動分開，不要擠在一起 */
         .att-top-row {
-            display: flex; justify-content: center; align-items: center;
+            display: flex; 
+            justify-content: space-evenly; 
+            align-items: center;
             width: 100%;
-            gap: 60px; 
+            height: 50%;
         }
         
-        .att-group { display: flex; align-items: center; gap: 8px; }
+        .att-item-container {
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+        }
+
         .att-label { font-size: 1.4rem; opacity: 0.95; white-space: nowrap; }
         .att-val { 
             font-size: 2.2rem; font-weight: bold; width: 70px; text-align: center;
@@ -215,18 +177,31 @@
         }
         .att-unit { font-size: 1.1rem; margin-left: 5px; opacity: 0.8; }
         
+        /* 下層：缺席座號 */
         .att-bottom-row {
             display: flex; justify-content: center; align-items: center;
             width: 100%;
-            gap: 15px;
+            height: 50%;
+            gap: 10px;
         }
         
-        .att-bottom-row .att-label { font-size: 1.4rem; white-space: nowrap; }
-        
+        /* [修正2] 輸入框與選號按鈕 */
+        .input-wrapper {
+            display: flex; align-items: center; gap: 5px;
+            flex: 1; max-width: 600px;
+        }
         #absentVal { 
-            width: 60%; 
+            flex: 1;
             text-align: left; padding-left: 15px; font-size: 1.4rem; 
             background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px; height: 45px;
+        }
+        
+        /* 選號按鈕樣式 */
+        .btn-picker {
+            background: #F2CC8F; color: #333; font-weight: bold;
+            height: 45px; padding: 0 15px; border-radius: 8px; border: none;
+            cursor: pointer; font-size: 1rem; white-space: nowrap;
+            display: none; /* 預設隱藏，登入後顯示 */
         }
 
         .signature {
@@ -234,15 +209,33 @@
             font-size: 0.9rem; color: rgba(255,255,255,0.8); font-weight: normal; letter-spacing: 1px;
         }
 
-        /* ============ 模式切換邏輯 ============ */
-        
-        /* 自習模式 */
+        /* 座號選擇器 Modal */
+        #seatModal {
+            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.6); z-index: 4000;
+            justify-content: center; align-items: center;
+        }
+        .seat-grid-container {
+            background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 600px;
+            max-height: 80vh; overflow-y: auto; text-align: center;
+        }
+        .seat-grid {
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0;
+        }
+        .seat-btn {
+            padding: 15px 0; font-size: 1.2rem; border-radius: 8px; border: 2px solid #ddd;
+            background: white; cursor: pointer; color: #333;
+        }
+        .seat-btn.selected {
+            background: var(--danger-color); color: white; border-color: var(--danger-color);
+        }
+
+        /* 模式切換邏輯 */
         body.mode-study .left-column { width: 50%; }
         body.mode-study .right-column { width: 50%; }
         body.mode-study #clockCard { height: auto; padding: 10px; }
         body.mode-study #timeDisplay { font-size: 5vw; }
 
-        /* 考試模式 */
         body.mode-exam .left-column { width: 50%; }
         body.mode-exam .right-column { width: 50%; }
         body.mode-exam #clockCard { flex: 1; } 
@@ -258,6 +251,7 @@
         .edit-row input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%; }
         .admin-only { display: none !important; }
         body.role-admin .admin-only { display: inline-block !important; }
+        body.role-admin .btn-picker, body.role-student .btn-picker { display: block !important; } /* 登入後顯示選號 */
         input:not(:read-only) { background: rgba(255,255,255,0.2); border: 1px dashed rgba(255,255,255,0.5); cursor: text; }
         input:read-only { cursor: default; outline: none; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -305,7 +299,6 @@
                     </div>
                 </div>
             </div>
-            
             <div class="card" id="infoCard">
                 <div class="card-header">
                     公告事項
@@ -334,12 +327,12 @@
 
     <div class="card" id="attendanceCard">
         <div class="att-top-row">
-            <div class="att-group">
+            <div class="att-item-container">
                 <span class="att-label">應到</span>
                 <input type="number" id="shouldVal" class="att-val admin-only-edit" value="37" readonly onchange="saveData()">
                 <span class="att-unit">人</span>
             </div>
-            <div class="att-group">
+            <div class="att-item-container">
                 <span class="att-label">實到</span>
                 <input type="number" id="actualVal" class="att-val" value="37" readonly onchange="saveData()">
                 <span class="att-unit">人</span>
@@ -348,9 +341,11 @@
         
         <div class="att-bottom-row">
             <span class="att-label">缺席座號</span>
-            <input type="text" id="absentVal" class="att-val" placeholder="無" readonly onchange="saveData()">
+            <div class="input-wrapper">
+                <input type="text" id="absentVal" class="att-val" placeholder="無" readonly onchange="saveData()">
+                <button class="btn-picker" onclick="openSeatPicker()">選號</button>
+            </div>
         </div>
-        
         <div class="signature">大安高工陳吳煜老師製</div>
     </div>
 
@@ -362,6 +357,18 @@
                 <button class="btn" onclick="addEditorRow()" style="background:#eee;">+ 新增一節</button>
                 <button class="btn btn-save" onclick="saveScheduleFromEditor()">儲存</button>
                 <button class="btn" onclick="closeEditor()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="seatModal" class="modal">
+        <div class="seat-grid-container">
+            <h3 style="color:var(--primary-color)">點選缺席座號</h3>
+            <div id="seatGrid" class="seat-grid">
+                </div>
+            <div style="margin-top:20px;">
+                <button class="btn btn-save" style="font-size:1.2rem; padding:10px 30px;" onclick="confirmSeats()">確定</button>
+                <button class="btn" style="font-size:1.2rem; padding:10px 30px; margin-left:10px;" onclick="closeSeatPicker()">取消</button>
             </div>
         </div>
     </div>
@@ -395,11 +402,62 @@
             attendance: { should: 37, actual: 37, absent: "" }
         };
 
+        // === 座號選擇器邏輯 ===
+        let tempSelectedSeats = new Set();
+
+        function openSeatPicker() {
+            const grid = document.getElementById('seatGrid');
+            grid.innerHTML = '';
+            tempSelectedSeats.clear();
+            
+            // 讀取目前的缺席號碼
+            const currentStr = document.getElementById('absentVal').value;
+            if(currentStr && currentStr !== '無') {
+                currentStr.split(',').forEach(s => tempSelectedSeats.add(parseInt(s.trim())));
+            }
+
+            // 產生 1-50 號按鈕
+            for(let i=1; i<=50; i++) {
+                const btn = document.createElement('div');
+                btn.className = 'seat-btn';
+                if(tempSelectedSeats.has(i)) btn.classList.add('selected');
+                btn.textContent = i < 10 ? '0'+i : i;
+                btn.onclick = () => {
+                    if(tempSelectedSeats.has(i)) {
+                        tempSelectedSeats.delete(i);
+                        btn.classList.remove('selected');
+                    } else {
+                        tempSelectedSeats.add(i);
+                        btn.classList.add('selected');
+                    }
+                };
+                grid.appendChild(btn);
+            }
+            document.getElementById('seatModal').style.display = 'flex';
+        }
+
+        function confirmSeats() {
+            const sorted = Array.from(tempSelectedSeats).sort((a,b) => a-b);
+            const str = sorted.map(n => n < 10 ? '0'+n : n).join(', ');
+            document.getElementById('absentVal').value = str || '';
+            
+            // 自動計算實到
+            const should = parseInt(document.getElementById('shouldVal').value) || 0;
+            const absentCount = sorted.length;
+            document.getElementById('actualVal').value = should - absentCount;
+            
+            saveData();
+            closeSeatPicker();
+        }
+
+        function closeSeatPicker() {
+            document.getElementById('seatModal').style.display = 'none';
+        }
+
+        // === 原有邏輯 ===
         function init() {
-            // [修正1] 強制設定實際視窗高度，解決大屏瀏覽器工具列遮擋問題
             setDocHeight();
             window.addEventListener('resize', setDocHeight);
-
             if(GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.length > 10) {
                 fetchGoogleSheetData();
                 setInterval(fetchGoogleSheetData, 60000);
@@ -413,7 +471,6 @@
             if(savedRole) authSuccess(savedRole);
         }
 
-        // [修正1] 計算實際可見高度並套用
         function setDocHeight() {
             document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
             document.body.style.height = `calc(var(--vh, 1vh) * 100)`;
@@ -634,8 +691,9 @@
             fetch(urlWithNoCache, {cache: "no-store"})
             .then(response => response.text())
             .then(csvText => {
-                if (document.activeElement.tagName === 'INPUT') {
-                    console.log("使用者輸入中，暫停更新");
+                // 如果正在操作 Modal 或 Input，暫停更新
+                if (document.getElementById('seatModal').style.display === 'flex' || document.activeElement.tagName === 'INPUT') {
+                    console.log("使用者操作中，暫停更新");
                     return;
                 }
 
