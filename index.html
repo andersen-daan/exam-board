@@ -21,13 +21,15 @@
             font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
             background-color: var(--bg-color);
             margin: 0; 
-            padding: 15px; 
+            padding: 15px;
+            padding-bottom: 25px; 
             color: var(--text-main);
-            position: fixed; 
-            top: 0; left: 0; right: 0; bottom: 0;
-            height: 100%; 
+            height: 100vh;
+            height: 100dvh; 
+            width: 100vw;
             display: flex; flex-direction: column;
             overflow: hidden; 
+            position: fixed; top: 0; left: 0;
         }
 
         /* 登入遮罩 */
@@ -54,17 +56,13 @@
         /* 頂部標題列 */
         header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 0 15px;
-            background: var(--card-bg);
+            padding: 0 15px; background: var(--card-bg);
             border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            margin-bottom: 8px; 
+            margin-bottom: 10px; 
             flex-shrink: 0;
             height: 50px;
         }
-        h1 { 
-            margin: 0; font-size: 1.6rem; color: var(--primary-color); 
-            letter-spacing: 2px; line-height: 50px; 
-        }
+        h1 { margin: 0; font-size: 1.6rem; color: var(--primary-color); letter-spacing: 2px; line-height: 50px; }
         .controls { display: flex; gap: 8px; align-items: center; }
         .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; background: #eee; color: #666; }
         #syncStatus { width: 10px; height: 10px; border-radius: 50%; background: #ccc; display: inline-block; margin-right: 5px; }
@@ -77,14 +75,18 @@
             gap: 12px;
             flex: 1; 
             min-height: 0; 
+            overflow: hidden;
             margin-bottom: 15px; 
         }
 
-        .left-column, .right-column {
+        .left-column {
+            display: flex; flex-direction: column; gap: 12px; 
+            height: 100%; overflow: hidden;
+        }
+        .right-column {
             display: flex; flex-direction: column;
             height: 100%; overflow: hidden;
         }
-        .left-column { gap: 12px; }
 
         /* 卡片共用樣式 */
         .card {
@@ -119,21 +121,41 @@
             position: absolute; bottom: 5px; right: 10px;
             font-size: 1rem; color: #444; display: none; font-weight: bold; text-align: right;
         }
+
+        /* 倒數區塊 */
         #countdownArea { width: 100%; margin-top: 5px; display: none; }
         .progress-container { width: 100%; height: 15px; background-color: #eee; border-radius: 12px; overflow: hidden; margin-top: 5px; }
         .progress-bar { height: 100%; width: 100%; background-color: var(--danger-color); transition: width 1s linear; }
         #countdownText { font-size: 1.3rem; font-weight: bold; color: var(--danger-color); display: block; }
 
         /* 2. 公告區 */
-        #infoCard { flex: 1; min-height: 0; }
+        #infoCard { flex: 1; min-height: 0; position: relative; /* 讓絕對定位的圖片參考這裡 */ }
         #announcementContent {
             white-space: pre-line; font-size: 1.3rem; line-height: 1.4; color: #444;
             overflow-y: auto; flex: 1; padding-right: 5px;
         }
+        
+        /* 圖片容器 (一般狀態) */
         #hurryImageContainer {
-            margin-top: 5px; display: none; justify-content: center; align-items: center; height: 40%; 
+            margin-top: 5px; display: none; justify-content: center; align-items: center;
+            height: 40%; transition: all 0.5s ease;
         }
-        #hurryImage { max-height: 100%; max-width: 100%; border-radius: 12px; object-fit: contain; }
+        
+        /* [修正2] 圖片容器 (放大狀態 - 倒數1分鐘) */
+        #hurryImageContainer.expanded {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95); /* 白色半透明背景蓋住文字 */
+            z-index: 20; /* 浮在文字上面 */
+            margin: 0;
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        #hurryImage { 
+            max-height: 100%; max-width: 100%; border-radius: 12px; object-fit: contain; 
+            transition: all 0.5s ease;
+        }
 
         /* 3. 考程表區 */
         #scheduleCard { height: 100%; min-height: 0; }
@@ -143,32 +165,21 @@
         tr.past-row td { color: var(--text-light); font-weight: normal; }
         tr.current-row { background-color: rgba(107, 142, 136, 0.15); border-left: 4px solid var(--primary-color); }
 
-        /* 4. 出缺席區 (Layout 修正) */
+        /* 4. 出缺席區 */
         #attendanceCard {
-            height: 140px; 
-            flex-shrink: 0; 
+            height: 140px; flex-shrink: 0; 
             display: flex; flex-direction: column; justify-content: center; 
-            padding: 5px 25px; 
-            background: var(--primary-color); color: white;
-            position: relative; 
-            border-radius: 12px;
-            gap: 10px; 
-            z-index: 10;
+            padding: 5px 25px; background: var(--primary-color); color: white;
+            position: relative; border-radius: 12px; gap: 10px; z-index: 10;
         }
         
-        /* [修正1] 使用 space-evenly 讓它們自動分開，不要擠在一起 */
         .att-top-row {
-            display: flex; 
-            justify-content: space-evenly; 
-            align-items: center;
-            width: 100%;
-            height: 50%;
+            display: flex; justify-content: space-evenly; align-items: center;
+            width: 100%; height: 50%;
         }
-        
         .att-item-container {
             display: flex; justify-content: center; align-items: center; gap: 10px;
         }
-
         .att-label { font-size: 1.4rem; opacity: 0.95; white-space: nowrap; }
         .att-val { 
             font-size: 2.2rem; font-weight: bold; width: 70px; text-align: center;
@@ -177,33 +188,23 @@
         }
         .att-unit { font-size: 1.1rem; margin-left: 5px; opacity: 0.8; }
         
-        /* 下層：缺席座號 */
         .att-bottom-row {
             display: flex; justify-content: center; align-items: center;
-            width: 100%;
-            height: 50%;
-            gap: 10px;
+            width: 100%; height: 50%; gap: 10px;
         }
-        
-        /* [修正2] 輸入框與選號按鈕 */
         .input-wrapper {
-            display: flex; align-items: center; gap: 5px;
-            flex: 1; max-width: 600px;
+            display: flex; align-items: center; gap: 5px; flex: 1; max-width: 600px;
         }
         #absentVal { 
-            flex: 1;
-            text-align: left; padding-left: 15px; font-size: 1.4rem; 
+            flex: 1; text-align: left; padding-left: 15px; font-size: 1.4rem; 
             background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px; height: 45px;
         }
-        
-        /* 選號按鈕樣式 */
         .btn-picker {
             background: #F2CC8F; color: #333; font-weight: bold;
             height: 45px; padding: 0 15px; border-radius: 8px; border: none;
             cursor: pointer; font-size: 1rem; white-space: nowrap;
-            display: none; /* 預設隱藏，登入後顯示 */
+            display: none;
         }
-
         .signature {
             position: absolute; bottom: 5px; right: 10px;
             font-size: 0.9rem; color: rgba(255,255,255,0.8); font-weight: normal; letter-spacing: 1px;
@@ -217,14 +218,26 @@
         }
         .seat-grid-container {
             background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 600px;
-            max-height: 80vh; overflow-y: auto; text-align: center;
+            max-height: 80vh; overflow-y: auto; 
         }
+        /* Modal Header */
+        .seat-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+        }
+        .seat-header h3 { margin: 0; color: var(--primary-color); }
+        
+        /* [修正1] 清除按鈕 */
+        .btn-clear {
+            background: #e74c3c; color: white; padding: 5px 12px; border: none;
+            border-radius: 6px; cursor: pointer; font-size: 0.9rem;
+        }
+
         .seat-grid {
-            display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0;
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0 20px 0;
         }
         .seat-btn {
             padding: 15px 0; font-size: 1.2rem; border-radius: 8px; border: 2px solid #ddd;
-            background: white; cursor: pointer; color: #333;
+            background: white; cursor: pointer; color: #333; text-align: center;
         }
         .seat-btn.selected {
             background: var(--danger-color); color: white; border-color: var(--danger-color);
@@ -251,7 +264,7 @@
         .edit-row input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%; }
         .admin-only { display: none !important; }
         body.role-admin .admin-only { display: inline-block !important; }
-        body.role-admin .btn-picker, body.role-student .btn-picker { display: block !important; } /* 登入後顯示選號 */
+        body.role-admin .btn-picker, body.role-student .btn-picker { display: block !important; } 
         input:not(:read-only) { background: rgba(255,255,255,0.2); border: 1px dashed rgba(255,255,255,0.5); cursor: text; }
         input:read-only { cursor: default; outline: none; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -299,6 +312,7 @@
                     </div>
                 </div>
             </div>
+            
             <div class="card" id="infoCard">
                 <div class="card-header">
                     公告事項
@@ -363,7 +377,10 @@
 
     <div id="seatModal" class="modal">
         <div class="seat-grid-container">
-            <h3 style="color:var(--primary-color)">點選缺席座號</h3>
+            <div class="seat-header">
+                <h3>點選缺席座號</h3>
+                <button class="btn-clear" onclick="clearAllSeats()">全部清除</button>
+            </div>
             <div id="seatGrid" class="seat-grid">
                 </div>
             <div style="margin-top:20px;">
@@ -410,13 +427,11 @@
             grid.innerHTML = '';
             tempSelectedSeats.clear();
             
-            // 讀取目前的缺席號碼
             const currentStr = document.getElementById('absentVal').value;
             if(currentStr && currentStr !== '無') {
                 currentStr.split(',').forEach(s => tempSelectedSeats.add(parseInt(s.trim())));
             }
 
-            // 產生 1-50 號按鈕
             for(let i=1; i<=50; i++) {
                 const btn = document.createElement('div');
                 btn.className = 'seat-btn';
@@ -436,12 +451,18 @@
             document.getElementById('seatModal').style.display = 'flex';
         }
 
+        // [修正1] 全部清除功能
+        function clearAllSeats() {
+            tempSelectedSeats.clear();
+            const btns = document.querySelectorAll('.seat-btn');
+            btns.forEach(btn => btn.classList.remove('selected'));
+        }
+
         function confirmSeats() {
             const sorted = Array.from(tempSelectedSeats).sort((a,b) => a-b);
             const str = sorted.map(n => n < 10 ? '0'+n : n).join(', ');
             document.getElementById('absentVal').value = str || '';
             
-            // 自動計算實到
             const should = parseInt(document.getElementById('shouldVal').value) || 0;
             const absentCount = sorted.length;
             document.getElementById('actualVal').value = should - absentCount;
@@ -530,7 +551,11 @@
                 }
                 badge.textContent = "自習/下課時段";
                 document.getElementById('countdownArea').style.display = 'none';
-                document.getElementById('hurryImageContainer').style.display = 'none';
+                
+                // 重置圖片狀態
+                const imgContainer = document.getElementById('hurryImageContainer');
+                imgContainer.style.display = 'none';
+                imgContainer.classList.remove('expanded');
             }
         }
 
@@ -554,26 +579,39 @@
             const text = document.getElementById('countdownText');
             const bar = document.getElementById('progressBar');
             const imgContainer = document.getElementById('hurryImageContainer');
+            
             if (remainingSec <= 300 && remainingSec > 0) {
                 area.style.display = 'block';
                 const mins = Math.ceil(remainingSec / 60);
-                if (mins > 1) {
+                
+                // [修正2] 圖片邏輯
+                if (remainingSec > 120) {
+                    // 大於 2 分鐘，不顯示圖片
+                    imgContainer.style.display = 'none';
+                    imgContainer.classList.remove('expanded');
                     text.textContent = `倒數 ${mins} 分鐘`;
                     text.classList.remove('urgent');
-                    imgContainer.style.display = 'none';
-                } else if (remainingSec > 10) {
-                    text.textContent = `倒數 1 分鐘`;
-                    text.classList.add('urgent');
+                } 
+                else if (remainingSec > 60) {
+                    // 1~2 分鐘之間，顯示普通圖片
                     imgContainer.style.display = 'flex';
-                } else {
+                    imgContainer.classList.remove('expanded');
+                    text.textContent = `倒數 ${mins} 分鐘`;
+                    text.classList.add('urgent');
+                } 
+                else {
+                    // 小於 1 分鐘，全螢幕覆蓋
+                    imgContainer.style.display = 'flex';
+                    imgContainer.classList.add('expanded');
                     text.textContent = `準備交卷`;
-                    imgContainer.style.display = 'flex'; 
                 }
+                
                 const percent = (remainingSec / 300) * 100;
                 bar.style.width = `${percent}%`;
             } else {
                 area.style.display = 'none';
                 imgContainer.style.display = 'none';
+                imgContainer.classList.remove('expanded');
             }
         }
 
@@ -691,7 +729,6 @@
             fetch(urlWithNoCache, {cache: "no-store"})
             .then(response => response.text())
             .then(csvText => {
-                // 如果正在操作 Modal 或 Input，暫停更新
                 if (document.getElementById('seatModal').style.display === 'flex' || document.activeElement.tagName === 'INPUT') {
                     console.log("使用者操作中，暫停更新");
                     return;
