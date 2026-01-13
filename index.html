@@ -61,7 +61,7 @@
         #syncStatus { width: 10px; height: 10px; border-radius: 50%; background: #ccc; display: inline-block; margin-right: 5px; }
         #syncStatus.active { background: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
 
-        /* 主畫面 Grid 佈局 (全域設定) */
+        /* 主畫面 Grid 佈局 */
         #mainContainer {
             display: grid;
             gap: 15px; 
@@ -89,7 +89,7 @@
         .btn-edit { background: #eee; color: #555; }
         .btn-save { background: var(--primary-color); color: white; }
 
-        /* 1. 時鐘區 (Clock) */
+        /* 1. 時鐘區 */
         #clockCard { justify-content: center; align-items: center; text-align: center; }
         
         #timeDisplay { 
@@ -115,7 +115,7 @@
             font-size: 1.8rem; font-weight: bold; color: var(--danger-color); display: block;
         }
 
-        /* 2. 考程表 (Schedule) */
+        /* 2. 考程表 */
         #scheduleCard { overflow-y: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 0; }
         th { text-align: left; color: #666; border-bottom: 2px solid #eee; padding: 8px; font-size: 0.9rem; position: sticky; top: 0; background: white;}
@@ -123,7 +123,7 @@
         tr.past-row td { color: var(--text-light); font-weight: normal; }
         tr.current-row { background-color: rgba(107, 142, 136, 0.15); border-left: 4px solid var(--primary-color); }
 
-        /* 3. 公告區 (Info) */
+        /* 3. 公告區 */
         #infoCard { display: flex; flex-direction: column; }
         #announcementContent {
             white-space: pre-line; font-size: 1.3rem; line-height: 1.35; color: #444;
@@ -131,7 +131,7 @@
         }
         #hurryImageContainer {
             margin-top: 5px; display: none; justify-content: center; align-items: center;
-            height: 40%; /* 限制圖片高度 */
+            height: 40%; 
             animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         #hurryImage {
@@ -139,7 +139,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); object-fit: contain;
         }
 
-        /* 4. 出缺席 (Attendance) */
+        /* 4. 出缺席 */
         #attendanceCard {
             grid-column: 1 / -1;
             display: flex; justify-content: flex-start; align-items: center;
@@ -160,7 +160,7 @@
             font-size: 0.8rem; color: rgba(255,255,255,0.4); font-weight: normal; letter-spacing: 1px;
         }
 
-        /* ============ 關鍵版面配置 (Grid Areas) ============ */
+        /* ============ 版面配置 (Grid Areas) ============ */
         
         /* 考試模式 (Exam Mode) */
         /* 左：大時鐘 | 右：公告 */
@@ -175,15 +175,17 @@
         body.mode-exam #infoCard { grid-area: info; }
         body.mode-exam #scheduleCard { display: none; }
         body.mode-exam #attendanceCard { grid-area: att; }
-        body.mode-exam #timeDisplay { font-size: min(18vw, 25vh); } /* 考試模式字大一點 */
+        
+        body.mode-exam #timeDisplay { font-size: min(18vw, 25vh); } 
+        /* [修正] 考試模式日期字體加大 */
+        body.mode-exam #dateDisplay { font-size: 2rem; color: var(--primary-color); font-weight: bold; margin-top: 15px;}
 
 
-        /* 自習模式 (Study Mode) - 您的指定版面 */
-        /* 左欄(40%)：上時鐘、下公告 | 右欄(60%)：考程表(跨兩列) */
+        /* 自習模式 (Study Mode) - 修正後 */
+        /* 左欄(40%)：上時鐘、下公告 | 右欄(60%)：考程表 */
         body.mode-study #mainContainer {
             grid-template-columns: 40% 60%;
-            /* 定義兩列高度：第一列自動(給時鐘)，第二列剩下(給公告)，第三列出缺席 */
-            grid-template-rows: auto 1fr auto; 
+            grid-template-rows: auto 1fr auto; /* 第一列時鐘(自動高)，第二列公告(剩餘)，第三列出缺席 */
             grid-template-areas: 
                 "clock schedule"
                 "info  schedule"
@@ -191,19 +193,17 @@
         }
         body.mode-study #scheduleCard { 
             grid-area: schedule; 
-            /* 讓考程表高度填滿 */
             height: 100%; 
         }
         body.mode-study #clockCard { 
             grid-area: clock; 
-            /* 給時鐘一個合適的高度，不要太扁 */
-            padding: 10px;
+            padding: 15px;
         }
         body.mode-study #infoCard { grid-area: info; }
         body.mode-study #attendanceCard { grid-area: att; }
         
-        /* [修正] 自習時鐘字體：限制最大為 8rem，避免撐破左上角 */
-        body.mode-study #timeDisplay { font-size: min(10vw, 8rem); }
+        /* [修正] 自習時鐘字體：更保守的設定 (5vw)，確保在左窄欄不切掉 */
+        body.mode-study #timeDisplay { font-size: min(5vw, 4rem); }
 
         /* Helpers */
         .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 3000; justify-content: center; align-items: center; }
@@ -327,11 +327,15 @@
 4. 桌面僅留下必要的文具用品。
 5. 考試期間請勿交談。`;
 
+        // [修正] 更新預設考程表
         const DEFAULT_SCHEDULE = [
-            { start: "08:10", end: "09:00", subject: "國語文", note: "開書考" },
-            { start: "09:10", end: "10:00", subject: "自習", note: "安靜自修" },
-            { start: "10:10", end: "11:00", subject: "數學", note: "帶圓規" },
-            { start: "11:10", end: "12:00", subject: "英語", note: "含英聽" }
+            { start: "08:20", end: "09:10", subject: "第一節", note: "" },
+            { start: "09:20", end: "10:10", subject: "第二節", note: "" },
+            { start: "10:20", end: "11:10", subject: "第三節", note: "" },
+            { start: "11:20", end: "12:10", subject: "第四節", note: "" },
+            { start: "13:10", end: "14:00", subject: "第五節", note: "" },
+            { start: "14:10", end: "15:00", subject: "第六節", note: "" },
+            { start: "15:10", end: "16:00", subject: "第七節", note: "" }
         ];
 
         let appData = {
