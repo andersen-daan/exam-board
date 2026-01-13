@@ -2,8 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>定期評量數位看板 v9.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>定期評量數位看板</title>
     <style>
         :root {
             --bg-color: #EEF2E6; 
@@ -24,7 +24,7 @@
             color: var(--text-main);
             height: 100vh;
             display: flex; flex-direction: column;
-            overflow: hidden;
+            overflow: hidden; /* 防止整個頁面捲動 */
         }
 
         /* 登入遮罩 */
@@ -54,6 +54,7 @@
             padding: 8px 20px; background: var(--card-bg);
             border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             margin-bottom: 10px; flex-shrink: 0;
+            height: 60px;
         }
         h1 { margin: 0; font-size: 1.4rem; color: var(--primary-color); letter-spacing: 2px; }
         .controls { display: flex; gap: 10px; align-items: center; }
@@ -61,13 +62,29 @@
         #syncStatus { width: 10px; height: 10px; border-radius: 50%; background: #ccc; display: inline-block; margin-right: 5px; }
         #syncStatus.active { background: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
 
-        /* 主畫面 Grid 佈局 */
+        /* === 主畫面佈局 (使用 Flexbox 取代 Grid 以獲得更穩定的跨裝置表現) === */
         #mainContainer {
-            display: grid;
-            gap: 15px; 
-            flex: 1;
-            height: 100%;
-            min-height: 0; 
+            display: flex;
+            flex-direction: row; /* 預設左右排 */
+            gap: 15px;
+            flex: 1; /* 佔滿剩餘高度 */
+            min-height: 0; /* 關鍵：防止內容撐開 */
+            margin-bottom: 10px;
+        }
+
+        /* 左側欄位容器 (包含時鐘 + 公告) */
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            width: 35%; /* 左欄寬度 */
+            gap: 15px;
+        }
+
+        /* 右側欄位容器 (包含考程) */
+        .right-column {
+            width: 65%; /* 右欄寬度 */
+            display: flex;
+            flex-direction: column;
         }
 
         /* 卡片共用樣式 */
@@ -75,7 +92,7 @@
             background: var(--card-bg); border-radius: 12px;
             padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
             position: relative; display: flex; flex-direction: column;
-            overflow: hidden; transition: all 0.5s ease;
+            overflow: hidden; 
         }
         .card-header {
             font-size: 1.2rem; font-weight: bold; color: var(--primary-color);
@@ -84,47 +101,42 @@
             flex-shrink: 0;
         }
 
-        /* 按鈕樣式 */
         .btn { padding: 4px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
         .btn-edit { background: #eee; color: #555; }
         .btn-save { background: var(--primary-color); color: white; }
 
         /* 1. 時鐘區 */
-        #clockCard { justify-content: center; align-items: center; text-align: center; }
+        #clockCard { 
+            justify-content: center; align-items: center; text-align: center;
+            flex-shrink: 0; /* 不縮小 */
+        }
         
         #timeDisplay { 
+            /* 修正：使用等寬字體，並強制限制最大寬度，避免 iPad 切字 */
             font-family: 'Courier New', monospace; font-weight: bold; 
             color: var(--clock-color); line-height: 1; 
             white-space: nowrap;
         }
         #dateDisplay { font-size: 1.2rem; color: #888; margin-top: 5px; }
         
+        /* 網路時間警語 */
+        #timeDisclaimer {
+            font-size: 0.8rem; color: #e74c3c; margin-top: 5px; 
+            display: none; /* 預設隱藏，考試模式顯示 */
+            font-weight: bold;
+        }
+
         /* 倒數區塊 */
-        #countdownArea {
-            width: 100%; margin-top: 15px; display: none; animation: fadeIn 0.5s;
-        }
-        .progress-container {
-            width: 100%; height: 25px; background-color: #eee;
-            border-radius: 12px; overflow: hidden; margin-top: 8px;
-        }
-        .progress-bar {
-            height: 100%; width: 100%; background-color: var(--danger-color);
-            transition: width 1s linear;
-        }
-        #countdownText {
-            font-size: 1.8rem; font-weight: bold; color: var(--danger-color); display: block;
-        }
+        #countdownArea { width: 100%; margin-top: 10px; display: none; }
+        .progress-container { width: 100%; height: 20px; background-color: #eee; border-radius: 12px; overflow: hidden; margin-top: 5px; }
+        .progress-bar { height: 100%; width: 100%; background-color: var(--danger-color); transition: width 1s linear; }
+        #countdownText { font-size: 1.5rem; font-weight: bold; color: var(--danger-color); display: block; }
 
-        /* 2. 考程表 */
-        #scheduleCard { overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 0; }
-        th { text-align: left; color: #666; border-bottom: 2px solid #eee; padding: 8px; font-size: 0.9rem; position: sticky; top: 0; background: white;}
-        td { padding: 12px 8px; border-bottom: 1px solid #f5f5f5; font-size: 1.1rem; color: var(--text-main); font-weight: bold;}
-        tr.past-row td { color: var(--text-light); font-weight: normal; }
-        tr.current-row { background-color: rgba(107, 142, 136, 0.15); border-left: 4px solid var(--primary-color); }
-
-        /* 3. 公告區 */
-        #infoCard { display: flex; flex-direction: column; }
+        /* 2. 公告區 */
+        #infoCard { 
+            flex: 1; /* 自動填滿左欄剩餘空間 */
+            min-height: 0; /* 允許縮小 */
+        }
         #announcementContent {
             white-space: pre-line; font-size: 1.3rem; line-height: 1.35; color: #444;
             overflow-y: auto; flex: 1;
@@ -132,19 +144,27 @@
         #hurryImageContainer {
             margin-top: 5px; display: none; justify-content: center; align-items: center;
             height: 40%; 
-            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        #hurryImage {
-            max-height: 100%; max-width: 100%; border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); object-fit: contain;
-        }
+        #hurryImage { max-height: 100%; max-width: 100%; border-radius: 12px; object-fit: contain; }
 
-        /* 4. 出缺席 */
+        /* 3. 考程表區 */
+        #scheduleCard { 
+            height: 100%; /* 填滿右欄 */
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 0; }
+        th { text-align: left; color: #666; border-bottom: 2px solid #eee; padding: 8px; font-size: 0.9rem; position: sticky; top: 0; background: white;}
+        td { padding: 12px 8px; border-bottom: 1px solid #f5f5f5; font-size: 1.1rem; color: var(--text-main); font-weight: bold;}
+        tr.past-row td { color: var(--text-light); font-weight: normal; }
+        tr.current-row { background-color: rgba(107, 142, 136, 0.15); border-left: 4px solid var(--primary-color); }
+
+        /* 4. 出缺席區 (獨立底部列) */
         #attendanceCard {
-            grid-column: 1 / -1;
+            height: 70px; /* 固定高度 */
             display: flex; justify-content: flex-start; align-items: center;
             padding: 10px 20px; background: var(--primary-color); color: white;
-            position: relative; min-height: 80px; 
+            position: relative; 
+            border-radius: 12px;
+            flex-shrink: 0;
         }
         .att-group { display: flex; align-items: center; gap: 5px; margin-right: 35px; }
         .att-label { font-size: 1.2rem; opacity: 0.9; }
@@ -160,50 +180,54 @@
             font-size: 0.8rem; color: rgba(255,255,255,0.4); font-weight: normal; letter-spacing: 1px;
         }
 
-        /* ============ 版面配置 (重點區域) ============ */
+        /* ============ 模式切換邏輯 (CSS Magic) ============ */
         
-        /* 考試模式 (Exam Mode) */
-        /* 左：大時鐘 | 右：公告 */
-        body.mode-exam #mainContainer {
-            grid-template-columns: 65% 35%;
-            grid-template-rows: 1fr auto;
-            grid-template-areas: 
-                "clock info"
-                "att   att";
-        }
-        body.mode-exam #clockCard { grid-area: clock; }
-        body.mode-exam #infoCard { grid-area: info; }
+        /* === 自習模式 (Study Mode) === */
+        /* 左欄顯示時鐘+公告，右欄顯示考程 */
+        body.mode-study .left-column { width: 35%; display: flex; }
+        body.mode-study .right-column { width: 65%; display: flex; }
+        body.mode-study #clockCard { height: auto; padding: 15px; }
+        
+        /* 自習模式字體：保守設定，最大 4rem */
+        body.mode-study #timeDisplay { font-size: min(8vw, 4rem); }
+
+        /* === 考試模式 (Exam Mode) === */
+        /* 左欄變寬(大時鐘)，右欄變窄(公告)，隱藏考程 */
+        body.mode-exam .left-column { width: 65%; }
+        body.mode-exam .right-column { width: 35%; }
+        
+        /* 考試模式特殊處理 */
+        body.mode-exam #clockCard { flex: 1; } /* 時鐘卡片佔滿左欄 */
+        body.mode-exam #infoCard { display: none; } /* 在左欄隱藏公告 */
+        
+        /* 將公告移到右欄顯示 (這裡用一個技巧：我們有兩個公告區容器嗎？不，我們用 Javascript 移動 DOM 或是 CSS Grid 重排) */
+        /* 為了穩定性，我們採用最簡單做法：考試模式下，右欄隱藏考程，顯示公告 */
+        /* 但我們的 HTML 結構是：左欄(時鐘+公告)，右欄(考程) */
+        /* 修正策略：CSS Order 無法跨父元素。我們用絕對定位覆蓋或 JS 調整 */
+        
+        /* 簡單解法：考試模式下，隱藏右欄的考程，顯示右欄的公告？不，公告在左欄 */
+        /* 我們讓 CSS 在考試模式下改變佈局：
+           讓 #mainContainer 變成只有兩欄，但內容交換？這太複雜容易錯。
+           
+           === 最終穩定解法 === 
+           HTML結構不動。
+           考試模式：
+           左欄 (寬65%)：只顯示時鐘 (隱藏公告)
+           右欄 (寬35%)：隱藏考程，顯示公告 (我們需要把公告複製一份到右邊嗎？不用)
+           
+           我們用 JS 在切換模式時，把 #infoCard 移動到 .right-column 去！這最穩！
+        */
+
         body.mode-exam #scheduleCard { display: none; }
-        body.mode-exam #attendanceCard { grid-area: att; }
+        body.mode-exam #timeDisclaimer { display: block; } /* 顯示警語 */
         
-        body.mode-exam #timeDisplay { font-size: min(18vw, 25vh); } 
-        body.mode-exam #dateDisplay { font-size: 2rem; color: var(--primary-color); font-weight: bold; margin-top: 15px;}
-
-
-        /* 自習模式 (Study Mode) */
-        /* 左欄(40%)：上方是時鐘(clock)、下方是公告(info) */
-        /* 右欄(60%)：整欄是考程(schedule) */
-        body.mode-study #mainContainer {
-            grid-template-columns: 40% 60%;
-            grid-template-rows: min-content 1fr auto; /* 第一列時鐘高度自動，第二列公告佔滿剩餘 */
-            grid-template-areas: 
-                "clock schedule"
-                "info  schedule"
-                "att   att";
-        }
-        body.mode-study #scheduleCard { 
-            grid-area: schedule; 
-            height: 100%; 
-        }
-        body.mode-study #clockCard { 
-            grid-area: clock; 
-            padding: 15px;
-        }
-        body.mode-study #infoCard { grid-area: info; }
-        body.mode-study #attendanceCard { grid-area: att; }
+        /* [修正重點] 考試模式時間字體 */
+        /* 使用 clamp 限制最小值與最大值，防止 iPad 爆掉 */
+        /* 13vw 在 iPad 橫放約 130px，直放約 100px，應該安全 */
+        body.mode-exam #timeDisplay { font-size: min(13vw, 160px); }
         
-        /* 字體保護 */
-        body.mode-study #timeDisplay { font-size: min(10vw, 8rem); }
+        /* 考試模式日期加大 */
+        body.mode-exam #dateDisplay { font-size: 1.8rem; font-weight: bold; margin-top: 15px; color: var(--primary-color); }
 
         /* Helpers */
         .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 3000; justify-content: center; align-items: center; }
@@ -236,7 +260,7 @@
 
     <header>
         <div style="display:flex; align-items:center;">
-            <h1>定期評量數位看板 (v9.0)</h1>
+            <h1>定期評量數位看板</h1>
             <span id="syncStatus" style="margin-left:15px;" title="同步狀態燈"></span>
         </div>
         <div class="controls">
@@ -247,57 +271,61 @@
     </header>
 
     <div id="mainContainer">
-        <div class="card" id="clockCard">
-            <div id="timeDisplay">00:00:00</div>
-            <div id="dateDisplay">--月--日 星期--</div>
+        <div class="left-column" id="colLeft">
+            <div class="card" id="clockCard">
+                <div id="timeDisplay">00:00:00</div>
+                <div id="dateDisplay">--月--日 星期--</div>
+                <div id="timeDisclaimer">以上網路時間僅供參考，請同學仍應依學校鐘聲為準。</div>
+                <div id="countdownArea">
+                    <span id="countdownText">倒數 5 分鐘</span>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                </div>
+            </div>
             
-            <div id="countdownArea">
-                <span id="countdownText">倒數 5 分鐘</span>
-                <div class="progress-container">
-                    <div class="progress-bar" id="progressBar"></div>
+            <div class="card" id="infoCard">
+                <div class="card-header">
+                    公告事項
+                    <button class="btn btn-edit admin-only" onclick="editInfo()">✎ 編輯</button>
+                </div>
+                <div id="announcementContent">讀取中...</div>
+                <div id="hurryImageContainer">
+                    <img id="hurryImage" src="hurry.jpg" alt="快寫完了"> 
                 </div>
             </div>
         </div>
 
-        <div class="card" id="infoCard">
-            <div class="card-header">
-                公告事項
-                <button class="btn btn-edit admin-only" onclick="editInfo()">✎ 編輯</button>
-            </div>
-            <div id="announcementContent">讀取中...</div>
-            <div id="hurryImageContainer">
-                <img id="hurryImage" src="hurry.jpg" alt="快寫完了"> 
+        <div class="right-column" id="colRight">
+            <div class="card" id="scheduleCard">
+                <div class="card-header">
+                    今日考程
+                    <button class="btn btn-edit admin-only" onclick="openScheduleEditor()">✎ 編輯</button>
+                </div>
+                <table id="scheduleTable">
+                    <thead><tr><th>時間</th><th>科目</th><th>備註</th></tr></thead>
+                    <tbody id="scheduleBody"></tbody>
+                </table>
             </div>
         </div>
+    </div>
 
-        <div class="card" id="scheduleCard">
-            <div class="card-header">
-                今日考程
-                <button class="btn btn-edit admin-only" onclick="openScheduleEditor()">✎ 編輯</button>
-            </div>
-            <table id="scheduleTable">
-                <thead><tr><th>時間</th><th>科目</th><th>備註</th></tr></thead>
-                <tbody id="scheduleBody"></tbody>
-            </table>
+    <div class="card" id="attendanceCard">
+        <div class="att-group">
+            <span class="att-label">應到</span>
+            <input type="number" id="shouldVal" class="att-val admin-only-edit" value="37" readonly onchange="saveData()">
+            <span class="att-unit">人</span>
         </div>
-
-        <div class="card" id="attendanceCard">
-            <div class="att-group">
-                <span class="att-label">應到</span>
-                <input type="number" id="shouldVal" class="att-val admin-only-edit" value="37" readonly onchange="saveData()">
-                <span class="att-unit">人</span>
-            </div>
-            <div class="att-group">
-                <span class="att-label">實到</span>
-                <input type="number" id="actualVal" class="att-val" value="37" readonly onchange="saveData()">
-                <span class="att-unit">人</span>
-            </div>
-            <div class="att-group" style="flex:1;">
-                <span class="att-label">缺席座號</span>
-                <input type="text" id="absentVal" class="att-val" placeholder="無" readonly onchange="saveData()">
-            </div>
-            <div class="signature">大安高工陳吳煜老師製</div>
+        <div class="att-group">
+            <span class="att-label">實到</span>
+            <input type="number" id="actualVal" class="att-val" value="37" readonly onchange="saveData()">
+            <span class="att-unit">人</span>
         </div>
+        <div class="att-group" style="flex:1;">
+            <span class="att-label">缺席座號</span>
+            <input type="text" id="absentVal" class="att-val" placeholder="無" readonly onchange="saveData()">
+        </div>
+        <div class="signature">大安高工陳吳煜老師製</div>
     </div>
 
     <div id="editorModal" class="modal">
@@ -313,13 +341,10 @@
     </div>
 
     <script>
-        // === 您的 Google Sheet CSV 連結 ===
         const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQACAdB7m2Bb2uYz7aIHU5TdXo5254vD0lpaKBkkyw621OEPW0hzHMdcFa5isuUDotgbFq7GRFghl9c/pub?output=csv";
-
         const PASSWORDS = { ADMIN: '1005', STUDENT: '1630' };
         let currentUserRole = null;
         let isForceMode = false;
-
         const DEFAULT_ANNOUNCEMENT = `考試期間請遵守以下規定：
 1. 請將手機及智慧型穿戴裝置關機並放置於手機袋。
 2. 書包請放置於教室前、後方走道。
@@ -350,11 +375,9 @@
             } else {
                 loadLocalData();
             }
-
             updateClock();
             setInterval(updateClock, 1000);
             renderUI();
-            
             const savedRole = localStorage.getItem('role');
             if(savedRole) authSuccess(savedRole);
         }
@@ -362,9 +385,7 @@
         function updateClock() {
             const now = new Date();
             document.getElementById('timeDisplay').textContent = now.toLocaleTimeString('zh-TW', { hour12: false });
-            document.getElementById('dateDisplay').textContent = 
-                now.toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'long' });
-
+            document.getElementById('dateDisplay').textContent = now.toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'long' });
             if (!isForceMode) checkScheduleMode(now);
             renderScheduleColor(now);
         }
@@ -380,7 +401,6 @@
                 const [eH, eM] = item.end.split(':').map(Number);
                 const startMin = sH * 60 + sM;
                 const endMin = eH * 60 + eM;
-
                 if (nowTime >= startMin && nowTime < endMin) {
                     if (item.subject !== "自習" && item.subject !== "午休") {
                         isExamining = true;
@@ -394,11 +414,18 @@
 
             const body = document.body;
             const badge = document.getElementById('currentModeBadge');
+            const infoCard = document.getElementById('infoCard');
+            const colLeft = document.getElementById('colLeft');
+            const colRight = document.getElementById('colRight');
 
             if (isExamining) {
                 if(!body.classList.contains('mode-exam')) {
                     body.classList.remove('mode-study');
                     body.classList.add('mode-exam');
+                    // [JS Layout Logic] 考試模式：把公告搬到右欄，讓左欄專心放時鐘
+                    colRight.appendChild(infoCard);
+                    infoCard.style.display = 'flex'; // 確保顯示
+                    infoCard.style.height = '100%'; 
                 }
                 badge.textContent = `考試中：${currentSubject}`;
                 handleCountdown(remainingSec);
@@ -406,6 +433,8 @@
                 if(!body.classList.contains('mode-study')) {
                     body.classList.remove('mode-exam');
                     body.classList.add('mode-study');
+                    // [JS Layout Logic] 自習模式：把公告搬回左欄
+                    colLeft.appendChild(infoCard);
                 }
                 badge.textContent = "自習/下課時段";
                 document.getElementById('countdownArea').style.display = 'none';
@@ -416,14 +445,12 @@
         function renderScheduleColor(now) {
             const rows = document.querySelectorAll('#scheduleBody tr');
             const nowTime = now.getHours() * 60 + now.getMinutes();
-
             appData.schedule.forEach((item, index) => {
                 if(!rows[index]) return;
                 const [eH, eM] = item.end.split(':').map(Number);
                 const [sH, sM] = item.start.split(':').map(Number);
                 const endMin = eH * 60 + eM;
                 const startMin = sH * 60 + sM;
-                
                 rows[index].className = ''; 
                 if (nowTime >= endMin) rows[index].classList.add('past-row'); 
                 else if (nowTime >= startMin && nowTime < endMin) rows[index].classList.add('current-row');
@@ -435,11 +462,9 @@
             const text = document.getElementById('countdownText');
             const bar = document.getElementById('progressBar');
             const imgContainer = document.getElementById('hurryImageContainer');
-
             if (remainingSec <= 300 && remainingSec > 0) {
                 area.style.display = 'block';
                 const mins = Math.ceil(remainingSec / 60);
-                
                 if (mins > 1) {
                     text.textContent = `倒數 ${mins} 分鐘`;
                     text.classList.remove('urgent');
@@ -473,7 +498,6 @@
             document.getElementById('loginOverlay').classList.add('hidden');
             document.body.classList.remove('role-admin', 'role-student');
             document.body.classList.add(`role-${role}`);
-            
             const inputs = document.querySelectorAll('.att-val');
             inputs.forEach(input => {
                 if(role === 'admin') input.removeAttribute('readonly');
@@ -487,10 +511,25 @@
         function logout() { localStorage.removeItem('role'); location.reload(); }
         function toggleForceMode() {
             isForceMode = !isForceMode;
+            // 手動切換時，為了讓 checkScheduleMode 觸發 layout 搬移，我們先手動觸發一次
+            const now = new Date();
             if(document.body.classList.contains('mode-exam')) {
-                document.body.classList.remove('mode-exam'); body.classList.add('mode-study');
+                // 強制切回自習
+                document.body.classList.remove('mode-exam'); 
+                document.body.classList.add('mode-study');
+                // 搬移 DOM
+                document.getElementById('colLeft').appendChild(document.getElementById('infoCard'));
+                document.getElementById('scheduleCard').style.display = 'flex';
+                document.getElementById('timeDisclaimer').style.display = 'none';
             } else {
-                document.body.classList.remove('mode-study'); body.classList.add('mode-exam');
+                // 強制切回考試
+                document.body.classList.remove('mode-study'); 
+                document.body.classList.add('mode-exam');
+                // 搬移 DOM
+                document.getElementById('colRight').appendChild(document.getElementById('infoCard'));
+                document.getElementById('scheduleCard').style.display = 'none';
+                document.getElementById('infoCard').style.display = 'flex';
+                document.getElementById('timeDisclaimer').style.display = 'block';
             }
             document.getElementById('currentModeBadge').textContent = isForceMode ? "手動模式" : "自動模式";
         }
@@ -562,44 +601,35 @@
         function fetchGoogleSheetData() {
             const urlWithNoCache = GOOGLE_SHEET_CSV_URL + "&t=" + Date.now();
             const statusLight = document.getElementById('syncStatus');
-            
             fetch(urlWithNoCache, {cache: "no-store"})
             .then(response => response.text())
             .then(csvText => {
                 const rows = csvText.split('\n').map(row => row.split(','));
-                
                 if(rows.length > 2) {
                     statusLight.classList.add('active'); 
                     setTimeout(() => statusLight.classList.remove('active'), 1000);
-
                     let headerIndex = -1;
                     for(let i=0; i<rows.length; i++) {
                         const rowStr = rows[i].join('').toLowerCase();
                         if(rowStr.includes('start') && rowStr.includes('subject')) {
-                            headerIndex = i;
-                            break;
+                            headerIndex = i; break;
                         }
                     }
-
                     if(headerIndex > 0) {
                         let announcementLines = [];
                         for(let i=0; i<headerIndex; i++) {
                             let line = rows[i][0].replace(/^"|"$/g, '').replace(/\\n/g, '\n');
                             if(line.trim()) announcementLines.push(line);
                         }
-                        if(announcementLines.length > 0) {
-                            appData.announcement = announcementLines.join('\n');
-                        }
+                        if(announcementLines.length > 0) appData.announcement = announcementLines.join('\n');
                     } else {
                         if(rows[0][0]) appData.announcement = rows[0][0].replace(/\\n/g, '\n');
                     }
-
                     const startIndex = (headerIndex !== -1) ? headerIndex + 1 : 2;
                     const newSchedule = [];
                     for(let i=startIndex; i<rows.length; i++) {
                         const [start, end, subject, note] = rows[i];
                         if (!start || start.toLowerCase().includes("start")) continue;
-
                         if(start && end && subject) {
                             newSchedule.push({
                                 start: start.trim().replace(/"/g,''),
@@ -617,7 +647,6 @@
             })
             .catch(err => console.error("同步失敗:", err));
         }
-
         init();
     </script>
 </body>
