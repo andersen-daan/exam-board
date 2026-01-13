@@ -20,11 +20,11 @@
         body {
             font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
             background-color: var(--bg-color);
-            margin: 0; padding: 10px; /* 縮小邊距 */
+            margin: 0; padding: 10px;
             color: var(--text-main);
             height: 100vh;
             display: flex; flex-direction: column;
-            overflow: hidden; /* 禁止捲動 */
+            overflow: hidden;
         }
 
         /* 登入遮罩 */
@@ -48,7 +48,7 @@
             border-radius: 8px; cursor: pointer;
         }
 
-        /* 頂部標題列 (變扁一點以節省空間) */
+        /* 頂部標題列 */
         header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 8px 20px; background: var(--card-bg);
@@ -59,15 +59,15 @@
         .controls { display: flex; gap: 10px; align-items: center; }
         .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 0.85rem; background: #eee; color: #666; }
 
-        /* 主畫面 Grid 佈局 - 改良版 */
+        /* 主畫面 Grid 佈局 */
         #mainContainer {
             display: grid;
             grid-template-columns: 35% 65%;
-            grid-template-rows: auto 1fr auto; /* 讓中間自動彈性，底部自動 */
-            gap: 10px; /* 縮小間隙 */
+            grid-template-rows: auto 1fr auto; 
+            gap: 10px; 
             flex: 1;
             height: 100%;
-            min-height: 0; /* 防止 Grid 內容撐破容器 */
+            min-height: 0; 
         }
 
         /* 卡片共用樣式 */
@@ -92,15 +92,20 @@
         /* 1. 時鐘區 (Clock) */
         #clockCard { justify-content: center; align-items: center; text-align: center; }
         
-        /* 使用 clamp 限制字體最大值，避免在大螢幕上過大 */
+        /* [修正重點1] 使用 min() 同時參照寬度和高度，確保不破版 */
         #timeDisplay { 
             font-family: 'Courier New', monospace; font-weight: bold; 
             color: var(--clock-color); line-height: 1; 
+            white-space: nowrap; /* 強制不換行 */
         }
         #dateDisplay { font-size: 1.2rem; color: #888; margin-top: 5px; }
         
+        /* 倒數區塊 */
         #countdownArea {
             width: 100%; margin-top: 15px; display: none; animation: fadeIn 0.5s;
+        }
+        .countdown-info {
+            display: flex; justify-content: center; align-items: center; gap: 15px;
         }
         .progress-container {
             width: 100%; height: 20px; background-color: #eee;
@@ -111,7 +116,17 @@
             transition: width 1s linear;
         }
         #countdownText {
-            font-size: 1.5rem; font-weight: bold; color: var(--danger-color); display: block;
+            font-size: 1.8rem; font-weight: bold; color: var(--danger-color); display: block;
+        }
+        
+        /* [修正重點3] 圖片樣式 */
+        #hurryImage {
+            height: 80px; /* 高度限制 */
+            width: auto;
+            border-radius: 8px;
+            display: none; /* 預設隱藏 */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         /* 2. 考程表 (Schedule) */
@@ -129,13 +144,13 @@
             height: 100%; overflow-y: auto;
         }
         
-        /* 4. 出缺席 (Attendance) - 底部區 */
+        /* 4. 出缺席 (Attendance) */
         #attendanceCard {
             grid-column: 1 / -1;
             display: flex; justify-content: flex-start; align-items: center;
             padding: 10px 20px; background: var(--primary-color); color: white;
             position: relative;
-            min-height: 80px; /* 固定高度以免被壓縮 */
+            min-height: 80px; 
         }
         .att-group { display: flex; align-items: center; gap: 5px; margin-right: 25px; }
         .att-label { font-size: 1.1rem; opacity: 0.9; }
@@ -153,9 +168,9 @@
             font-weight: normal; letter-spacing: 1px;
         }
 
-        /* ============ 模式切換邏輯 (修正版面比例) ============ */
+        /* ============ 模式切換邏輯 ============ */
         
-        /* 考試模式：左時鐘(大)，右公告(小) */
+        /* 考試模式 */
         body.mode-exam #mainContainer {
             grid-template-columns: 60% 40%;
             grid-template-areas: 
@@ -167,10 +182,12 @@
         body.mode-exam #infoCard { grid-area: info; }
         body.mode-exam #scheduleCard { display: none; }
         body.mode-exam #attendanceCard { grid-area: att; }
-        /* 使用 clamp(最小, 理想, 最大) 避免過大 */
-        body.mode-exam #timeDisplay { font-size: clamp(4rem, 18vw, 12rem); } 
+        
+        /* [修正重點1] 使用 min(vw, vh) 確保文字在任何螢幕都不會爆開 */
+        /* 意思是：取螢幕寬度的18% 或 螢幕高度的30%，看哪個比較小就用哪個 */
+        body.mode-exam #timeDisplay { font-size: min(18vw, 30vh); } 
 
-        /* 自習模式：左考程，右時鐘+公告 */
+        /* 自習模式 */
         body.mode-study #mainContainer {
             grid-template-columns: 40% 60%;
             grid-template-areas: 
@@ -182,27 +199,19 @@
         body.mode-study #clockCard { grid-area: clock; }
         body.mode-study #infoCard { grid-area: info; }
         body.mode-study #attendanceCard { grid-area: att; }
-        body.mode-study #timeDisplay { font-size: clamp(3rem, 6vw, 6rem); }
+        body.mode-study #timeDisplay { font-size: min(6vw, 15vh); } /* 自習模式字小一點 */
 
-        /* Helper Classes */
-        .modal {
-            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.5); z-index: 3000;
-            justify-content: center; align-items: center;
-        }
-        .modal-content {
-            background: white; padding: 25px; border-radius: 15px; width: 600px;
-            max-height: 80vh; overflow-y: auto;
-        }
+        /* CSS Helpers */
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 3000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 600px; max-height: 80vh; overflow-y: auto; }
         .edit-row { display: grid; grid-template-columns: 1fr 1fr 1.5fr 1fr auto; gap: 5px; margin-bottom: 10px; }
         .edit-row input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%; }
-
         .admin-only { display: none !important; }
         body.role-admin .admin-only { display: inline-block !important; }
         input:not(:read-only) { background: rgba(255,255,255,0.2); border: 1px dashed rgba(255,255,255,0.5); cursor: text; }
         input:read-only { cursor: default; outline: none; }
-        
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
         @keyframes blink { 50% { opacity: 0.5; } }
         .urgent { animation: blink 1s infinite; color: var(--danger-color); }
 
@@ -255,7 +264,10 @@
             <div id="dateDisplay">--月--日 星期--</div>
             
             <div id="countdownArea">
-                <span id="countdownText">倒數 5 分鐘</span>
+                <div class="countdown-info">
+                    <span id="countdownText">倒數 5 分鐘</span>
+                    <img id="hurryImage" src="hurry.jpg" alt="快寫完了"> 
+                </div>
                 <div class="progress-container">
                     <div class="progress-bar" id="progressBar"></div>
                 </div>
@@ -301,14 +313,15 @@
         let currentUserRole = null;
         let isForceMode = false;
 
-        const DEFAULT_ANNOUNCEMENT = `1. 請將手機及智慧型穿戴裝置關機並放置於手機袋。
+        const DEFAULT_ANNOUNCEMENT = `考試期間請遵守以下規定：
+1. 請將手機及智慧型穿戴裝置關機並放置於手機袋。
 2. 書包請放置於教室前、後方走道。
 3. 桌子請轉向（抽屜朝向講桌）。
 4. 桌面僅留下必要的文具用品。
 5. 考試期間請勿交談。`;
 
         const DEFAULT_SCHEDULE = [
-            { start: "08:10", end: "09:00", subject: "國語文", note: "開書考" },
+            { start: "08:10", end: "09:00", subject: "國文", note: "開書考" },
             { start: "09:10", end: "10:00", subject: "自習", note: "安靜自修" },
             { start: "10:10", end: "11:00", subject: "數學", note: "帶圓規" },
             { start: "11:10", end: "12:00", subject: "英語", note: "含英聽" }
@@ -321,9 +334,9 @@
         };
 
         function init() {
-            if(GOOGLE_SHEET_CSV_URL) {
+            if(GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.length > 10) {
                 fetchGoogleSheetData();
-                setInterval(fetchGoogleSheetData, 10000);
+                setInterval(fetchGoogleSheetData, 10000); // 10秒同步
             } else {
                 loadLocalData();
             }
@@ -332,7 +345,6 @@
             setInterval(updateClock, 1000);
             renderUI();
             
-            // 改為使用 localStorage 讀取權限 (重開機也不會登出)
             const savedRole = localStorage.getItem('role');
             if(savedRole) authSuccess(savedRole);
         }
@@ -374,15 +386,17 @@
             const badge = document.getElementById('currentModeBadge');
 
             if (isExamining) {
-                body.classList.remove('mode-exam'); // 確保切換動畫
-                void body.offsetWidth; // 觸發 reflow
-                body.classList.remove('mode-study');
-                body.classList.add('mode-exam');
+                if(!body.classList.contains('mode-exam')) {
+                    body.classList.remove('mode-study');
+                    body.classList.add('mode-exam');
+                }
                 badge.textContent = `考試中：${currentSubject}`;
                 handleCountdown(remainingSec);
             } else {
-                body.classList.remove('mode-exam');
-                body.classList.add('mode-study');
+                if(!body.classList.contains('mode-study')) {
+                    body.classList.remove('mode-exam');
+                    body.classList.add('mode-study');
+                }
                 badge.textContent = "自習/下課時段";
                 document.getElementById('countdownArea').style.display = 'none';
             }
@@ -412,6 +426,7 @@
             const area = document.getElementById('countdownArea');
             const text = document.getElementById('countdownText');
             const bar = document.getElementById('progressBar');
+            const img = document.getElementById('hurryImage');
 
             if (remainingSec <= 300 && remainingSec > 0) {
                 area.style.display = 'block';
@@ -420,16 +435,20 @@
                 if (mins > 1) {
                     text.textContent = `倒數 ${mins} 分鐘`;
                     text.classList.remove('urgent');
+                    img.style.display = 'none'; // 超過1分鐘不顯示圖
                 } else if (remainingSec > 10) {
                     text.textContent = `倒數 1 分鐘`;
                     text.classList.add('urgent');
+                    img.style.display = 'block'; // [修正重點3] 顯示圖片
                 } else {
                     text.textContent = `準備交卷`;
+                    img.style.display = 'block'; // 繼續顯示
                 }
                 const percent = (remainingSec / 300) * 100;
                 bar.style.width = `${percent}%`;
             } else {
                 area.style.display = 'none';
+                img.style.display = 'none';
             }
         }
 
@@ -442,7 +461,6 @@
 
         function authSuccess(role) {
             currentUserRole = role;
-            // 改用 localStorage，永久保持登入
             localStorage.setItem('role', role);
             document.getElementById('loginOverlay').classList.add('hidden');
             document.body.classList.remove('role-admin', 'role-student');
@@ -459,7 +477,7 @@
         }
 
         function logout() { 
-            localStorage.removeItem('role'); // 登出時才清除
+            localStorage.removeItem('role'); 
             location.reload(); 
         }
         
@@ -540,9 +558,12 @@
             if(saved) appData = JSON.parse(saved);
         }
 
-        // CSV 資料同步邏輯 (已修正標題列問題)
+        // CSV 資料同步邏輯 (修正：強制不快取)
         function fetchGoogleSheetData() {
-            fetch(GOOGLE_SHEET_CSV_URL)
+            // [修正重點2] 加上時間戳記 &t=Date.now() 強制不讀取舊資料
+            const urlWithNoCache = GOOGLE_SHEET_CSV_URL + "&t=" + Date.now();
+            
+            fetch(urlWithNoCache, {cache: "no-store"})
             .then(response => response.text())
             .then(csvText => {
                 const rows = csvText.split('\n').map(row => row.split(','));
@@ -552,11 +573,9 @@
                     if(remoteAnnouncement) appData.announcement = remoteAnnouncement.replace(/\\n/g, '\n');
 
                     const newSchedule = [];
-                    // 從第 2 列開始跑迴圈，但加入判斷
                     for(let i=1; i<rows.length; i++) {
                         const [start, end, subject, note] = rows[i];
                         
-                        // 修正2：過濾掉標題列 (如果欄位含有 "Start" 或 "Subject" 則跳過)
                         if (!start || start.toLowerCase().includes("start") || subject.toLowerCase().includes("subject")) {
                             continue;
                         }
