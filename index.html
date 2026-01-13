@@ -21,7 +21,7 @@
             font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
             background-color: var(--bg-color);
             margin: 0; 
-            padding: 10px; 
+            padding: 15px; /* 增加邊距讓整體往內縮一點，避免貼邊 */
             color: var(--text-main);
             height: 100vh;
             display: flex; flex-direction: column;
@@ -49,16 +49,16 @@
             border-radius: 8px; cursor: pointer;
         }
 
-        /* 頂部標題列 (高度壓縮) */
+        /* 頂部標題列 */
         header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 5px 15px; background: var(--card-bg);
             border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            margin-bottom: 8px; 
+            margin-bottom: 10px; 
             flex-shrink: 0;
-            height: 50px; /* 設定更小高度 */
+            height: 55px;
         }
-        h1 { margin: 0; font-size: 1.2rem; color: var(--primary-color); letter-spacing: 2px; }
+        h1 { margin: 0; font-size: 1.3rem; color: var(--primary-color); letter-spacing: 2px; }
         .controls { display: flex; gap: 8px; align-items: center; }
         .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; background: #eee; color: #666; }
         #syncStatus { width: 10px; height: 10px; border-radius: 50%; background: #ccc; display: inline-block; margin-right: 5px; }
@@ -68,17 +68,18 @@
         #mainContainer {
             display: flex;
             flex-direction: row; 
-            gap: 10px;
-            flex: 1; /* 自動填滿剩餘高度 */
-            min-height: 0; /* 重要：防止溢出 */
-            margin-bottom: 8px;
+            gap: 12px;
+            flex: 1; 
+            min-height: 0; 
+            /* [修正2] 加大下方 margin，讓考程表/公告下緣往上，把空間讓給底部 */
+            margin-bottom: 15px;
         }
 
         /* 左側欄位容器 */
         .left-column {
             display: flex;
             flex-direction: column;
-            gap: 10px; 
+            gap: 12px; 
         }
 
         /* 右側欄位容器 */
@@ -90,7 +91,7 @@
         /* 卡片共用樣式 */
         .card {
             background: var(--card-bg); border-radius: 12px;
-            padding: 10px; 
+            padding: 12px; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.03);
             position: relative; display: flex; flex-direction: column;
             overflow: hidden; 
@@ -116,7 +117,6 @@
             font-family: 'Courier New', monospace; font-weight: bold; 
             color: var(--clock-color); line-height: 1; 
             white-space: nowrap;
-            /* 字體大小在下方的 Media Queries 設定 */
         }
         #dateDisplay { font-size: 1.1rem; color: #888; margin-top: 5px; }
         
@@ -156,19 +156,21 @@
         tr.past-row td { color: var(--text-light); font-weight: normal; }
         tr.current-row { background-color: rgba(107, 142, 136, 0.15); border-left: 4px solid var(--primary-color); }
 
-        /* 4. 出缺席區 (Layout 重整) */
+        /* 4. 出缺席區 (修正佈局) */
         #attendanceCard {
-            height: 60px; /* 固定且較矮的高度 */
-            display: flex; justify-content: space-between; align-items: center; /* 左右分開 */
-            padding: 5px 15px; background: var(--primary-color); color: white;
+            height: 70px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 5px 20px; background: var(--primary-color); color: white;
             position: relative; 
             border-radius: 12px;
-            flex-shrink: 0;
+            flex-shrink: 0; /* 禁止被壓縮 */
         }
         
         /* 左半部：應到 + 實到 */
         .att-left-section {
-            display: flex; align-items: center; gap: 15px;
+            display: flex; align-items: center; 
+            /* [修正4] 加大間距 */
+            gap: 30px; 
         }
         
         .att-group { display: flex; align-items: center; gap: 5px; }
@@ -180,15 +182,27 @@
         }
         .att-unit { font-size: 0.9rem; margin-left: 2px; }
         
-        /* 分隔線 */
-        .att-divider { width: 2px; height: 30px; background: rgba(255,255,255,0.3); }
+        /* 分隔線 (如果間距夠大，分隔線可有可無，這裡保留但變淡) */
+        .att-divider { width: 1px; height: 30px; background: rgba(255,255,255,0.2); display:none; /* 既然分開了，隱藏線比較乾淨 */ }
 
-        /* 右半部：缺席座號 */
+        /* 右半部：缺席座號 (修正顯示問題) */
         .att-right-section {
-            display: flex; align-items: center; flex: 1; justify-content: flex-end; gap: 10px;
+            display: flex; align-items: center; 
+            flex: 1; /* 佔據右側剩餘空間 */
+            justify-content: flex-end; /* 內容靠右 */
+            gap: 10px;
+            margin-left: 20px; /* 與左側保持距離 */
+            overflow: hidden; /* 防止撐開 */
         }
+        
+        /* [修正3] 確保標籤不被切掉，輸入框自適應 */
+        .att-right-section .att-label { white-space: nowrap; }
+        
         #absentVal { 
-            width: 100%; max-width: 400px; text-align: left; padding-left: 10px; font-size: 1.3rem; 
+            flex: 1; /* 自動填滿剩餘寬度 */
+            max-width: 400px; 
+            min-width: 100px; /* 最小寬度 */
+            text-align: left; padding-left: 10px; font-size: 1.3rem; 
             background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px; height: 40px;
         }
 
@@ -197,31 +211,28 @@
             font-size: 0.65rem; color: rgba(255,255,255,0.4); font-weight: normal; letter-spacing: 1px;
         }
 
-        /* ============ 模式切換與字體控制 ============ */
+        /* ============ 模式切換邏輯 ============ */
         
         /* === 自習模式 (Study Mode) === */
+        /* [修正1] 左右等寬 50% */
         body.mode-study .left-column { width: 50%; }
         body.mode-study .right-column { width: 50%; }
         body.mode-study #clockCard { height: auto; padding: 10px; }
         
-        /* [修正] 自習時鐘字體：改為 5vw (寬度的5%)，確保 8 個字不會超過 40-50% 的寬度 */
-        /* 計算：5vw * 8字 = 40vw < 50vw (安全) */
-        body.mode-study #timeDisplay { font-size: 5vw; }
+        body.mode-study #timeDisplay { font-size: min(10vw, 4.5rem); }
 
         /* === 考試模式 (Exam Mode) === */
-        body.mode-exam .left-column { width: 65%; }
-        body.mode-exam .right-column { width: 35%; }
+        /* [修正1] 左右等寬 50% (依照您的新要求) */
+        body.mode-exam .left-column { width: 50%; }
+        body.mode-exam .right-column { width: 50%; }
         
         body.mode-exam #clockCard { flex: 1; } 
         body.mode-exam #infoCard { display: none; } 
         body.mode-exam #scheduleCard { display: none; }
         body.mode-exam #timeDisclaimer { display: block; } 
         
-        /* [修正] 考試時鐘字體：改為 11vw */
-        /* 計算：11vw * 8字 = 88vw > 65vw ??? 不對，字體寬度通常是 font-size 的 0.6 倍 */
-        /* 11vw * 0.6 * 8 = 52.8vw < 65vw (安全) */
-        body.mode-exam #timeDisplay { font-size: 11vw; }
-        
+        /* 考試時鐘字體：因為現在只有50%寬，字體稍微縮小以配合 */
+        body.mode-exam #timeDisplay { font-size: min(13vw, 20vh); }
         body.mode-exam #dateDisplay { font-size: 1.8rem; font-weight: bold; margin-top: 15px; color: var(--primary-color); }
 
         /* Helpers */
@@ -312,7 +323,6 @@
                 <input type="number" id="shouldVal" class="att-val admin-only-edit" value="37" readonly onchange="saveData()">
                 <span class="att-unit">人</span>
             </div>
-            <div class="att-divider"></div>
             <div class="att-group">
                 <span class="att-label">實到</span>
                 <input type="number" id="actualVal" class="att-val" value="37" readonly onchange="saveData()">
