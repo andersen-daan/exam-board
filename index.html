@@ -20,7 +20,7 @@
         body {
             font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
             background-color: var(--bg-color);
-            margin: 0; padding: 15px; /* 稍微增加邊距讓畫面呼吸 */
+            margin: 0; padding: 15px;
             color: var(--text-main);
             height: 100vh;
             display: flex; flex-direction: column;
@@ -58,7 +58,6 @@
         h1 { margin: 0; font-size: 1.4rem; color: var(--primary-color); letter-spacing: 2px; }
         .controls { display: flex; gap: 10px; align-items: center; }
         .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 0.85rem; background: #eee; color: #666; }
-        /* 資料同步狀態燈 */
         #syncStatus { width: 10px; height: 10px; border-radius: 50%; background: #ccc; display: inline-block; margin-right: 5px; }
         #syncStatus.active { background: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
 
@@ -95,13 +94,13 @@
         /* 1. 時鐘區 (Clock) */
         #clockCard { justify-content: center; align-items: center; text-align: center; }
         
-        /* [修正重點1] 使用 min() 雙重限制，確保數字不切邊 */
+        /* [修正重點1] 字體縮小為 12vw，確保手機直立時 8 個字也不會切掉 */
         #timeDisplay { 
             font-family: 'Courier New', monospace; font-weight: bold; 
             color: var(--clock-color); line-height: 1; 
             white-space: nowrap;
             /* 預設大小 (自習模式) */
-            font-size: min(8vw, 12vh); 
+            font-size: min(8vw, 10vh); 
         }
         #dateDisplay { font-size: 1.2rem; color: #888; margin-top: 5px; }
         
@@ -126,35 +125,22 @@
         table { width: 100%; border-collapse: collapse; margin-top: 0; }
         th { text-align: left; color: #666; border-bottom: 2px solid #eee; padding: 8px; font-size: 0.9rem; position: sticky; top: 0; background: white;}
         td { padding: 12px 8px; border-bottom: 1px solid #f5f5f5; font-size: 1.1rem; color: var(--text-main); font-weight: bold;}
-        
         tr.past-row td { color: var(--text-light); font-weight: normal; }
         tr.current-row { background-color: rgba(107, 142, 136, 0.15); border-left: 4px solid var(--primary-color); }
 
-        /* 3. 公告區 (Info) - 彈性佈局 */
-        #infoCard {
-            display: flex; flex-direction: column;
-        }
+        /* 3. 公告區 (Info) */
+        #infoCard { display: flex; flex-direction: column; }
         #announcementContent {
             white-space: pre-line; font-size: 1.3rem; line-height: 1.6; color: #444;
-            overflow-y: auto;
-            flex: 1; /* 佔據上半部空間 */
+            overflow-y: auto; flex: 1;
         }
-        
-        /* [修正重點3] 圖片樣式 - 位於公告區下方 */
         #hurryImageContainer {
-            margin-top: 10px;
-            display: none; /* 預設隱藏 */
-            justify-content: center;
-            align-items: center;
-            height: 40%; /* 佔據下半部約40%高度 */
-            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-top: 10px; display: none; justify-content: center; align-items: center;
+            height: 40%; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         #hurryImage {
-            max-height: 100%;
-            max-width: 100%;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            object-fit: contain;
+            max-height: 100%; max-width: 100%; border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); object-fit: contain;
         }
 
         /* 4. 出缺席 (Attendance) */
@@ -162,8 +148,7 @@
             grid-column: 1 / -1;
             display: flex; justify-content: flex-start; align-items: center;
             padding: 10px 20px; background: var(--primary-color); color: white;
-            position: relative;
-            min-height: 80px; 
+            position: relative; min-height: 80px; 
         }
         .att-group { display: flex; align-items: center; gap: 5px; margin-right: 35px; }
         .att-label { font-size: 1.2rem; opacity: 0.9; }
@@ -174,44 +159,33 @@
         }
         .att-unit { font-size: 1rem; margin-left: 3px; }
         #absentVal { width: 300px; text-align: left; padding-left: 10px; font-size: 1.5rem; }
-
         .signature {
             position: absolute; bottom: 8px; right: 15px;
-            font-size: 0.8rem; color: rgba(255,255,255,0.4);
-            font-weight: normal; letter-spacing: 1px;
+            font-size: 0.8rem; color: rgba(255,255,255,0.4); font-weight: normal; letter-spacing: 1px;
         }
 
-        /* ============ 模式切換邏輯 ============ */
-        
-        /* 考試模式 */
+        /* ============ 模式切換 ============ */
         body.mode-exam #mainContainer {
             grid-template-columns: 60% 40%;
-            grid-template-areas: 
-                "clock info"
-                "clock info"
-                "att att";
+            grid-template-areas: "clock info" "clock info" "att att";
         }
         body.mode-exam #clockCard { grid-area: clock; }
         body.mode-exam #infoCard { grid-area: info; }
         body.mode-exam #scheduleCard { display: none; }
         body.mode-exam #attendanceCard { grid-area: att; }
         
-        /* [修正重點1] 考試模式下的字體：取 (寬度16vw) 或 (高度22vh) 較小者，保證不切邊 */
-        body.mode-exam #timeDisplay { font-size: min(16vw, 22vh); } 
+        /* [修正重點1] 考試模式字體限制更嚴格，確保不切邊 */
+        body.mode-exam #timeDisplay { font-size: min(12vw, 20vh); } 
 
-        /* 自習模式 */
         body.mode-study #mainContainer {
             grid-template-columns: 40% 60%;
-            grid-template-areas: 
-                "schedule clock"
-                "schedule info"
-                "att att";
+            grid-template-areas: "schedule clock" "schedule info" "att att";
         }
         body.mode-study #scheduleCard { grid-area: schedule; }
         body.mode-study #clockCard { grid-area: clock; }
         body.mode-study #infoCard { grid-area: info; }
         body.mode-study #attendanceCard { grid-area: att; }
-        body.mode-study #timeDisplay { font-size: min(6vw, 15vh); }
+        body.mode-study #timeDisplay { font-size: min(7vw, 15vh); }
 
         /* Helpers */
         .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 3000; justify-content: center; align-items: center; }
@@ -261,7 +235,6 @@
                 <button class="btn btn-edit admin-only" onclick="editInfo()">✎ 編輯</button>
             </div>
             <div id="announcementContent">讀取中...</div>
-            
             <div id="hurryImageContainer">
                 <img id="hurryImage" src="hurry.jpg" alt="快寫完了"> 
             </div>
@@ -329,6 +302,7 @@
         let currentUserRole = null;
         let isForceMode = false;
 
+        // [修正重點3] 更新預設公告內容
         const DEFAULT_ANNOUNCEMENT = `考試期間請遵守以下規定：
 1. 請將手機及智慧型穿戴裝置關機並放置於手機袋。
 2. 書包請放置於教室前、後方走道。
@@ -352,7 +326,7 @@
         function init() {
             if(GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.length > 10) {
                 fetchGoogleSheetData();
-                setInterval(fetchGoogleSheetData, 10000); // 10秒同步
+                setInterval(fetchGoogleSheetData, 10000);
             } else {
                 loadLocalData();
             }
@@ -429,13 +403,10 @@
                 const [sH, sM] = item.start.split(':').map(Number);
                 const endMin = eH * 60 + eM;
                 const startMin = sH * 60 + sM;
-
+                
                 rows[index].className = ''; 
-                if (nowTime >= endMin) {
-                    rows[index].classList.add('past-row'); 
-                } else if (nowTime >= startMin && nowTime < endMin) {
-                    rows[index].classList.add('current-row');
-                }
+                if (nowTime >= endMin) rows[index].classList.add('past-row'); 
+                else if (nowTime >= startMin && nowTime < endMin) rows[index].classList.add('current-row');
             });
         }
 
@@ -452,11 +423,11 @@
                 if (mins > 1) {
                     text.textContent = `倒數 ${mins} 分鐘`;
                     text.classList.remove('urgent');
-                    imgContainer.style.display = 'none'; // 超過1分鐘不顯示圖
+                    imgContainer.style.display = 'none';
                 } else if (remainingSec > 10) {
                     text.textContent = `倒數 1 分鐘`;
                     text.classList.add('urgent');
-                    imgContainer.style.display = 'flex'; // [修正重點3] 顯示圖片在公告區
+                    imgContainer.style.display = 'flex';
                 } else {
                     text.textContent = `準備交卷`;
                     imgContainer.style.display = 'flex'; 
@@ -482,7 +453,7 @@
             document.getElementById('loginOverlay').classList.add('hidden');
             document.body.classList.remove('role-admin', 'role-student');
             document.body.classList.add(`role-${role}`);
-
+            
             const inputs = document.querySelectorAll('.att-val');
             inputs.forEach(input => {
                 if(role === 'admin') input.removeAttribute('readonly');
@@ -493,19 +464,13 @@
             });
         }
 
-        function logout() { 
-            localStorage.removeItem('role'); 
-            location.reload(); 
-        }
-        
+        function logout() { localStorage.removeItem('role'); location.reload(); }
         function toggleForceMode() {
             isForceMode = !isForceMode;
             if(document.body.classList.contains('mode-exam')) {
-                document.body.classList.remove('mode-exam');
-                document.body.classList.add('mode-study');
+                document.body.classList.remove('mode-exam'); body.classList.add('mode-study');
             } else {
-                document.body.classList.remove('mode-study');
-                document.body.classList.add('mode-exam');
+                document.body.classList.remove('mode-study'); body.classList.add('mode-exam');
             }
             document.getElementById('currentModeBadge').textContent = isForceMode ? "手動模式" : "自動模式";
         }
@@ -563,7 +528,6 @@
             closeEditor();
         }
         function closeEditor() { document.getElementById('editorModal').style.display = 'none'; }
-
         function saveData() {
             appData.attendance.should = document.getElementById('shouldVal').value;
             appData.attendance.actual = document.getElementById('actualVal').value;
@@ -575,7 +539,7 @@
             if(saved) appData = JSON.parse(saved);
         }
 
-        // [修正重點2] 暴力解析 CSV
+        // [修正重點2] 智慧解析 CSV：自動過濾標題列，合併公告
         function fetchGoogleSheetData() {
             const urlWithNoCache = GOOGLE_SHEET_CSV_URL + "&t=" + Date.now();
             const statusLight = document.getElementById('syncStatus');
@@ -585,25 +549,50 @@
             .then(csvText => {
                 const rows = csvText.split('\n').map(row => row.split(','));
                 
-                // 資料驗證：至少要有公告(Row1)和資料(Row3)
                 if(rows.length > 2) {
-                    statusLight.classList.add('active'); // 亮綠燈代表成功
+                    statusLight.classList.add('active'); 
                     setTimeout(() => statusLight.classList.remove('active'), 1000);
 
-                    // 1. 讀取公告 (Row 1, Column A)
-                    const remoteAnnouncement = rows[0][0]; 
-                    if(remoteAnnouncement) appData.announcement = remoteAnnouncement.replace(/\\n/g, '\n');
+                    // 1. 尋找「考程標題」在哪一行 (含有 "Start" 或 "Subject" 的那行)
+                    let headerIndex = -1;
+                    for(let i=0; i<rows.length; i++) {
+                        const rowStr = rows[i].join('').toLowerCase();
+                        if(rowStr.includes('start') && rowStr.includes('subject')) {
+                            headerIndex = i;
+                            break;
+                        }
+                    }
 
-                    // 2. 讀取考程 (從第 3 列 [index 2] 開始讀，跳過標題列)
+                    // 2. 處理公告：將 Header 以前的所有第一欄文字合併
+                    if(headerIndex > 0) {
+                        let announcementLines = [];
+                        for(let i=0; i<headerIndex; i++) {
+                            // 去除 CSV 可能產生的多餘引號
+                            let line = rows[i][0].replace(/^"|"$/g, '').replace(/\\n/g, '\n');
+                            if(line.trim()) announcementLines.push(line);
+                        }
+                        if(announcementLines.length > 0) {
+                            appData.announcement = announcementLines.join('\n');
+                        }
+                    } else {
+                        // 如果找不到 Header，就照舊只讀第一行 (fallback)
+                        if(rows[0][0]) appData.announcement = rows[0][0].replace(/\\n/g, '\n');
+                    }
+
+                    // 3. 處理考程：從 Header 的下一行開始讀
+                    const startIndex = (headerIndex !== -1) ? headerIndex + 1 : 2;
                     const newSchedule = [];
-                    for(let i=2; i<rows.length; i++) {
+                    for(let i=startIndex; i<rows.length; i++) {
                         const [start, end, subject, note] = rows[i];
+                        // 再次確認不是標題列 (雙重保險)
+                        if (!start || start.toLowerCase().includes("start")) continue;
+
                         if(start && end && subject) {
                             newSchedule.push({
-                                start: start.trim(),
-                                end: end.trim(),
-                                subject: subject.trim(),
-                                note: note ? note.trim() : ""
+                                start: start.trim().replace(/"/g,''),
+                                end: end.trim().replace(/"/g,''),
+                                subject: subject.trim().replace(/"/g,''),
+                                note: note ? note.trim().replace(/"/g,'') : ""
                             });
                         }
                     }
@@ -613,9 +602,7 @@
                     }
                 }
             })
-            .catch(err => {
-                console.error("同步失敗:", err);
-            });
+            .catch(err => console.error("同步失敗:", err));
         }
 
         init();
