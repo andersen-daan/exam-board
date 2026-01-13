@@ -21,12 +21,12 @@
             font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
             background-color: var(--bg-color);
             margin: 0; 
-            padding: 15px;
-            padding-bottom: 25px; /* [修正] 底部留更多白邊，防止大屏切邊 */
+            padding: 15px; 
             color: var(--text-main);
-            /* [修正] 改用 dvh (動態高度) 以適應大屏瀏覽器的工具列 */
-            height: 100vh; 
+            /* [關鍵修正] 強制鎖定高度，禁止主畫面捲動 */
+            height: 100vh;
             height: 100dvh; 
+            width: 100vw;
             display: flex; flex-direction: column;
             overflow: hidden; 
         }
@@ -57,7 +57,7 @@
             display: flex; justify-content: space-between; align-items: center;
             padding: 5px 15px; background: var(--card-bg);
             border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            margin-bottom: 8px; 
+            margin-bottom: 10px; 
             flex-shrink: 0;
             height: 50px;
         }
@@ -72,11 +72,11 @@
             display: flex;
             flex-direction: row; 
             gap: 12px;
-            /* [修正] 這裡設定 flex: 1，但如果高度不夠，允許它縮小 */
             flex: 1; 
+            /* [關鍵修正] 讓中間區域「可被壓縮」，並且如果內容太多，是在內部捲動，而不是撐開 Body */
             min-height: 0; 
-            /* [修正] 這裡的 margin 可以稍微縮小，把空間讓給下面 */
-            margin-bottom: 12px; 
+            overflow: hidden;
+            margin-bottom: 15px; /* 與底部的距離 */
         }
 
         /* 左側欄位容器 */
@@ -84,23 +84,25 @@
             display: flex;
             flex-direction: column;
             gap: 12px; 
-            min-height: 0; /* 允許內部內容縮小 */
+            height: 100%; /* 填滿高度 */
+            overflow: hidden; /* 防止撐開 */
         }
 
         /* 右側欄位容器 */
         .right-column {
             display: flex;
             flex-direction: column;
-            min-height: 0;
+            height: 100%;
+            overflow: hidden;
         }
 
         /* 卡片共用樣式 */
         .card {
             background: var(--card-bg); border-radius: 12px;
-            padding: 10px; /* 內距縮小 */
+            padding: 10px; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.03);
             position: relative; display: flex; flex-direction: column;
-            overflow: hidden; 
+            overflow: hidden; /* 卡片內容溢出隱藏 (或捲動) */
         }
         .card-header {
             font-size: 1.1rem; font-weight: bold; color: var(--primary-color);
@@ -116,10 +118,9 @@
         /* 1. 時鐘區 */
         #clockCard { 
             justify-content: center; align-items: center; text-align: center;
-            /* [修正] 允許時鐘稍微被壓縮，以保全下方 */
-            flex-shrink: 1; 
-            min-height: 100px; /* 最小高度保護 */
+            flex-shrink: 0; /* 時鐘高度盡量固定，不要縮太小 */
             position: relative;
+            min-height: 120px;
         }
         
         #timeDisplay { 
@@ -129,19 +130,13 @@
         }
         
         #dateDisplay { 
-            font-size: 1.6rem; font-weight: bold; margin-top: 5px; 
+            font-size: 1.8rem; font-weight: bold; margin-top: 5px; 
             color: var(--primary-color); 
         }
         
         #timeDisclaimer {
-            position: absolute;
-            bottom: 5px;
-            right: 10px;
-            font-size: 1rem; 
-            color: #444; 
-            display: none; 
-            font-weight: bold; 
-            text-align: right;
+            position: absolute; bottom: 5px; right: 10px;
+            font-size: 1rem; color: #444; display: none; font-weight: bold; text-align: right;
         }
 
         /* 倒數區塊 */
@@ -152,12 +147,14 @@
 
         /* 2. 公告區 */
         #infoCard { 
-            flex: 1; /* 佔滿剩餘空間 */
-            min-height: 0; /* 重要：允許捲軸出現 */
+            flex: 1; /* 佔滿剩餘高度 */
+            min-height: 0; /* 允許縮小並出現捲軸 */
         }
         #announcementContent {
             white-space: pre-line; font-size: 1.25rem; line-height: 1.4; color: #444;
-            overflow-y: auto; flex: 1;
+            overflow-y: auto; /* 內容過多時顯示捲軸 */
+            flex: 1;
+            padding-right: 5px;
         }
         #hurryImageContainer {
             margin-top: 5px; display: none; justify-content: center; align-items: center;
@@ -168,55 +165,74 @@
         /* 3. 考程表區 */
         #scheduleCard { 
             height: 100%; 
+            min-height: 0;
         }
         table { width: 100%; border-collapse: collapse; margin-top: 0; }
         th { text-align: left; color: #666; border-bottom: 2px solid #eee; padding: 6px; font-size: 0.9rem; position: sticky; top: 0; background: white;}
-        td { padding: 8px 6px; /* 稍微縮小 padding */ border-bottom: 1px solid #f5f5f5; font-size: 1.05rem; color: var(--text-main); font-weight: bold;}
+        td { padding: 10px 6px; border-bottom: 1px solid #f5f5f5; font-size: 1.05rem; color: var(--text-main); font-weight: bold;}
         tr.past-row td { color: var(--text-light); font-weight: normal; }
         tr.current-row { background-color: rgba(107, 142, 136, 0.15); border-left: 4px solid var(--primary-color); }
 
-        /* 4. 出缺席區 (高度固定，優先權最高) */
+        /* 4. 出缺席區 (Layout 終極修正) */
         #attendanceCard {
-            /* [修正] 固定高度 130px，並設定 flex-shrink: 0 (絕對不准被壓縮) */
-            height: 130px; 
-            flex-shrink: 0; 
+            /* 固定高度，確保不被切掉 */
+            height: 140px; 
+            flex-shrink: 0; /* 禁止被壓縮 */
             display: flex; flex-direction: column; justify-content: center; 
-            padding: 10px 20px; background: var(--primary-color); color: white;
+            padding: 5px 15px; 
+            background: var(--primary-color); color: white;
             position: relative; 
             border-radius: 12px;
             gap: 10px; 
-            z-index: 10; /* 確保浮在最上層 */
+            z-index: 10;
         }
         
+        /* 上層：應到 + 實到 */
         .att-top-row {
-            display: flex; justify-content: center; align-items: center;
+            display: flex; 
+            justify-content: space-between; /* 改用 space-between 確保撐開 */
+            align-items: center;
             width: 100%;
-            /* [修正] 稍微縮小間距，避免擠壓 */
-            gap: 40px; 
+            height: 50%;
         }
         
-        .att-group { display: flex; align-items: center; gap: 5px; }
-        /* [修正] 加入 nowrap 防止換行 */
-        .att-label { font-size: 1.3rem; opacity: 0.95; white-space: nowrap; }
-        .att-val { 
-            font-size: 2rem; font-weight: bold; width: 60px; text-align: center;
-            background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px;
-            padding: 0px;
-        }
-        .att-unit { font-size: 1rem; margin-left: 3px; opacity: 0.8; }
-        
-        .att-bottom-row {
-            display: flex; justify-content: center; align-items: center;
-            width: 100%;
+        /* [修正] 使用獨立容器，各佔 50%，保證不打架 */
+        .att-item-container {
+            flex: 1; /* 各佔一半 */
+            display: flex;
+            justify-content: center; /* 內容置中 */
+            align-items: center;
             gap: 10px;
         }
         
-        .att-bottom-row .att-label { font-size: 1.3rem; white-space: nowrap; }
+        /* 加一條中間分隔線，視覺更清楚 */
+        .att-separator {
+            width: 1px; height: 30px; background: rgba(255,255,255,0.3);
+        }
+
+        .att-label { font-size: 1.4rem; opacity: 0.95; white-space: nowrap; }
+        .att-val { 
+            font-size: 2.2rem; font-weight: bold; width: 70px; text-align: center;
+            background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px;
+            padding: 0px;
+        }
+        .att-unit { font-size: 1.1rem; margin-left: 5px; opacity: 0.8; }
+        
+        /* 下層：缺席座號 */
+        .att-bottom-row {
+            display: flex; justify-content: center; align-items: center;
+            width: 100%;
+            height: 50%;
+            gap: 15px;
+        }
+        
+        .att-bottom-row .att-label { font-size: 1.4rem; white-space: nowrap; }
         
         #absentVal { 
-            width: 50%; 
-            text-align: left; padding-left: 10px; font-size: 1.3rem; 
-            background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px; height: 40px;
+            flex: 1; /* 填滿剩餘寬度 */
+            max-width: 600px; 
+            text-align: left; padding-left: 15px; font-size: 1.4rem; 
+            background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px; height: 45px;
         }
 
         .signature {
@@ -229,15 +245,13 @@
         /* === 自習模式 (Study Mode) === */
         body.mode-study .left-column { width: 50%; }
         body.mode-study .right-column { width: 50%; }
-        body.mode-study #clockCard { padding: 10px; } /* 高度自動，但有 flex-shrink */
-        
+        body.mode-study #clockCard { height: auto; }
         body.mode-study #timeDisplay { font-size: 5vw; }
 
         /* === 考試模式 (Exam Mode) === */
         body.mode-exam .left-column { width: 50%; }
         body.mode-exam .right-column { width: 50%; }
-        
-        body.mode-exam #clockCard { flex: 1; } 
+        body.mode-exam #clockCard { flex: 1; } /* 時鐘在左欄變大 */
         body.mode-exam #infoCard { display: none; } 
         body.mode-exam #scheduleCard { display: none; }
         body.mode-exam #timeDisclaimer { display: block; } 
@@ -327,12 +341,15 @@
 
     <div class="card" id="attendanceCard">
         <div class="att-top-row">
-            <div class="att-group">
+            <div class="att-item-container">
                 <span class="att-label">應到</span>
                 <input type="number" id="shouldVal" class="att-val admin-only-edit" value="37" readonly onchange="saveData()">
                 <span class="att-unit">人</span>
             </div>
-            <div class="att-group">
+            
+            <div class="att-separator"></div>
+
+            <div class="att-item-container">
                 <span class="att-label">實到</span>
                 <input type="number" id="actualVal" class="att-val" value="37" readonly onchange="saveData()">
                 <span class="att-unit">人</span>
@@ -529,17 +546,14 @@
         function logout() { localStorage.removeItem('role'); location.reload(); }
         function toggleForceMode() {
             isForceMode = !isForceMode;
-            // 手動觸發佈局切換
             const now = new Date();
             if(document.body.classList.contains('mode-exam')) {
-                // 強制切回自習
                 document.body.classList.remove('mode-exam'); 
                 document.body.classList.add('mode-study');
                 document.getElementById('colLeft').appendChild(document.getElementById('infoCard'));
                 document.getElementById('scheduleCard').style.display = 'flex';
                 document.getElementById('timeDisclaimer').style.display = 'none';
             } else {
-                // 強制切回考試
                 document.body.classList.remove('mode-study'); 
                 document.body.classList.add('mode-exam');
                 document.getElementById('colRight').appendChild(document.getElementById('infoCard'));
