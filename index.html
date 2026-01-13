@@ -124,14 +124,15 @@
             color: var(--primary-color); 
         }
         
+        /* [修正1] 警語加大、加深 */
         #timeDisclaimer {
             position: absolute;
             bottom: 8px;
             right: 12px;
-            font-size: 0.75rem; 
-            color: #8fa39d;
+            font-size: 1rem; /* 加大 */
+            color: #444; /* 加深，與公告同色 */
             display: none; 
-            font-weight: normal;
+            font-weight: bold; /* 加粗 */
             text-align: right;
         }
 
@@ -200,7 +201,6 @@
         
         .att-bottom-row .att-label { font-size: 1.4rem; white-space: nowrap; }
         
-        /* [修正重點1] 補上 class="att-val" 讓 JS 可以選取到它並解除鎖定 */
         #absentVal { 
             width: 60%; 
             text-align: left; padding-left: 15px; font-size: 1.4rem; 
@@ -214,24 +214,17 @@
 
         /* ============ 模式切換邏輯 ============ */
         
-        /* === 自習模式 (Study Mode) === */
         body.mode-study .left-column { width: 50%; }
         body.mode-study .right-column { width: 50%; }
         body.mode-study #clockCard { height: auto; padding: 10px; }
-        
-        /* 自習時鐘字體 */
-        body.mode-study #timeDisplay { font-size: min(8vw, 4.5rem); }
+        body.mode-study #timeDisplay { font-size: 5vw; }
 
-        /* === 考試模式 (Exam Mode) === */
         body.mode-exam .left-column { width: 50%; }
         body.mode-exam .right-column { width: 50%; }
-        
         body.mode-exam #clockCard { flex: 1; } 
         body.mode-exam #infoCard { display: none; } 
         body.mode-exam #scheduleCard { display: none; }
         body.mode-exam #timeDisclaimer { display: block; } 
-        
-        /* [修正重點2] 考試時鐘字體縮小至 8.5vw，確保 50% 寬度下不切邊 */
         body.mode-exam #timeDisplay { font-size: min(8.5vw, 20vh); }
 
         /* Helpers */
@@ -381,7 +374,8 @@
         function init() {
             if(GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.length > 10) {
                 fetchGoogleSheetData();
-                setInterval(fetchGoogleSheetData, 10000);
+                // [修正2] 改為 60 秒 (60000ms) 檢查一次
+                setInterval(fetchGoogleSheetData, 60000);
             } else {
                 loadLocalData();
             }
@@ -506,8 +500,6 @@
             document.getElementById('loginOverlay').classList.add('hidden');
             document.body.classList.remove('role-admin', 'role-student');
             document.body.classList.add(`role-${role}`);
-            
-            // [關鍵修正] 現在能抓到 .att-val 了 (包含 id="absentVal")
             const inputs = document.querySelectorAll('.att-val');
             inputs.forEach(input => {
                 if(role === 'admin') input.removeAttribute('readonly');
@@ -609,6 +601,12 @@
             fetch(urlWithNoCache, {cache: "no-store"})
             .then(response => response.text())
             .then(csvText => {
+                // [修正3] 如果使用者正在打字 (focus 在 input 裡面)，就暫停這次的畫面更新，避免干擾
+                if (document.activeElement.tagName === 'INPUT') {
+                    console.log("使用者輸入中，暫停更新");
+                    return;
+                }
+
                 const rows = csvText.split('\n').map(row => row.split(','));
                 if(rows.length > 2) {
                     statusLight.classList.add('active'); 
