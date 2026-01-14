@@ -14,6 +14,8 @@
             --danger-color: #E07A5F; 
             --clock-color: #2F3E46;
             --warning-yellow: #F4D35E; 
+            --sync-on: #27ae60; /* 連線中綠色 */
+            --sync-off: #c0392b; /* 暫停紅色 */
         }
 
         * { box-sizing: border-box; }
@@ -107,6 +109,10 @@
         .btn { padding: 3px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
         .btn-edit { background: #eee; color: #555; }
         .btn-save { background: var(--primary-color); color: white; }
+        
+        /* [新增] 同步控制按鈕樣式 */
+        .btn-sync { background: var(--sync-on); color: white; min-width: 80px; }
+        .btn-sync.paused { background: var(--sync-off); animation: pulse-red 2s infinite; }
 
         #clockCard { 
             justify-content: center; align-items: center; text-align: center;
@@ -213,7 +219,7 @@
         body.role-admin .admin-only { display: inline-block !important; }
         body.role-admin .btn-picker, body.role-student .btn-picker { display: block !important; } 
         
-        /* [修正1] 學生模式強制隱藏所有編輯按鈕 */
+        /* [修正] 學生模式強制隱藏所有編輯按鈕 */
         body.role-student .btn-edit { display: none !important; }
 
         input:not(:read-only) { background: rgba(255,255,255,0.2); border: 1px dashed rgba(255,255,255,0.5); cursor: text; }
@@ -222,6 +228,7 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.05); } 100% { transform: scale(1); } }
         @keyframes blink-text { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
+        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.7; box-shadow: 0 0 10px #c0392b; } 100% { opacity: 1; } }
     </style>
 </head>
 <body class="mode-study">
@@ -248,6 +255,7 @@
         </div>
         <div class="controls">
             <span id="currentModeBadge" class="status-badge">載入中...</span>
+            <button id="btnSyncToggle" class="btn btn-sync admin-only" onclick="toggleSync()">連線中</button>
             <button class="btn btn-edit admin-only" onclick="toggleForceMode()">強制切換模式</button>
             <button class="btn btn-edit" onclick="logout()" style="background:#e74c3c; color:white;">登出</button>
         </div>
@@ -348,6 +356,8 @@
         const PASSWORDS = { ADMIN: '1005', STUDENT: '1630' };
         let currentUserRole = null;
         let isForceMode = false;
+        // [新增] 暫停同步旗標
+        let isSyncPaused = false;
         
         const DEFAULT_ANNOUNCEMENT = `考試期間請遵守以下規定：
 1. 請將手機及智慧型穿戴裝置關機並放置於手機袋。
@@ -370,10 +380,12 @@
             setDocHeight();
             window.addEventListener('resize', setDocHeight);
 
-            // [修正3] 啟動時立刻抓取，不等待 60 秒
             if(GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.length > 10) {
-                fetchGoogleSheetData();
-                setInterval(fetchGoogleSheetData, 60000);
+                fetchGoogleSheetData(); // 初次載入
+                setInterval(() => {
+                    // [修改] 如果暫停同步，就不執行 fetch
+                    if (!isSyncPaused) fetchGoogleSheetData();
+                }, 60000);
             } else {
                 loadLocalData();
             }
@@ -389,6 +401,21 @@
         function setDocHeight() {
             document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
             document.body.style.height = `calc(var(--vh, 1vh) * 100)`;
+        }
+
+        // [新增] 切換同步狀態
+        function toggleSync() {
+            isSyncPaused = !isSyncPaused;
+            const btn = document.getElementById('btnSyncToggle');
+            if(isSyncPaused) {
+                btn.textContent = "已暫停";
+                btn.classList.add('paused');
+            } else {
+                btn.textContent = "連線中";
+                btn.classList.remove('paused');
+                // 恢復連線時立刻抓取一次
+                fetchGoogleSheetData();
+            }
         }
 
         function updateClock() {
@@ -407,7 +434,6 @@
             const msgBox = document.getElementById('overlayMessage');
             let activeAlert = null; 
 
-            // 1. 打掃
             if(appData.schedule.length > 0) {
                 const lastItem = appData.schedule[appData.schedule.length - 1];
                 const [eH, eM] = lastItem.end.split(':').map(Number);
@@ -417,7 +443,6 @@
                 }
             }
 
-            // 2. 預備鐘
             if(!activeAlert) {
                 for(let item of appData.schedule) {
                     if(item.subject === '自習' || item.subject === '午休') continue;
@@ -439,7 +464,6 @@
                 }
             }
 
-            // 3. 自習提醒 (文字微調)
             if(!activeAlert) {
                 const nowMinutes = now.getHours() * 60 + now.getMinutes();
                 const isSelfStudy = appData.schedule.some(item => {
@@ -454,7 +478,7 @@
                     const m = now.getMinutes();
                     const s = now.getSeconds();
                     if (m % 10 === 0 && s < 30) {
-                        // [修正2] 拿掉驚嘆號
+                        // [修正] 文字微調
                         activeAlert = { type: 'warning', text: '<h1>請保持安靜<br>打起精神<br>專心看書</h1>', blink: false, size: 'h-50' };
                     }
                 }
@@ -740,7 +764,8 @@
             fetch(urlWithNoCache, {cache: "no-store"})
             .then(response => response.text())
             .then(csvText => {
-                if (document.getElementById('seatModal').style.display === 'flex' || document.activeElement.tagName === 'INPUT') return;
+                // [修改] 如果正在操作 Modal / Input / 或是「暫停連線」中，就不更新
+                if (isSyncPaused || document.getElementById('seatModal').style.display === 'flex' || document.activeElement.tagName === 'INPUT') return;
 
                 const rows = csvText.split('\n').map(row => row.split(','));
                 if(rows.length > 2) {
