@@ -14,8 +14,8 @@
             --danger-color: #E07A5F; 
             --clock-color: #2F3E46;
             --warning-yellow: #F4D35E; 
-            --sync-on: #27ae60; /* 連線中綠色 */
-            --sync-off: #c0392b; /* 暫停紅色 */
+            --sync-on: #27ae60; 
+            --sync-off: #c0392b; 
         }
 
         * { box-sizing: border-box; }
@@ -106,13 +106,25 @@
             flex-shrink: 0;
         }
 
+        /* 按鈕基礎樣式 */
         .btn { padding: 3px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+        /* 編輯按鈕 (灰色) */
         .btn-edit { background: #eee; color: #555; }
+        /* 儲存/確定按鈕 (綠色) */
         .btn-save { background: var(--primary-color); color: white; }
+        /* 登出按鈕 (紅色，獨立樣式) */
+        .btn-logout { background: #e74c3c; color: white; }
         
-        /* [新增] 同步控制按鈕樣式 */
+        /* 同步控制按鈕 (僅 Admin 可見) */
         .btn-sync { background: var(--sync-on); color: white; min-width: 80px; }
         .btn-sync.paused { background: var(--sync-off); animation: pulse-red 2s infinite; }
+
+        /* Admin Only: 預設隱藏，只有 role-admin 才顯示 */
+        .admin-only { display: none !important; }
+        body.role-admin .admin-only { display: inline-block !important; }
+
+        /* Student Only: 學生模式下強制隱藏特定編輯按鈕 */
+        body.role-student .btn-edit { display: none !important; }
 
         #clockCard { 
             justify-content: center; align-items: center; text-align: center;
@@ -216,12 +228,6 @@
         body.mode-exam #timeDisclaimer { display: block; } 
         body.mode-exam #timeDisplay { font-size: min(8.5vw, 20vh); }
 
-        body.role-admin .admin-only { display: inline-block !important; }
-        body.role-admin .btn-picker, body.role-student .btn-picker { display: block !important; } 
-        
-        /* [修正] 學生模式強制隱藏所有編輯按鈕 */
-        body.role-student .btn-edit { display: none !important; }
-
         input:not(:read-only) { background: rgba(255,255,255,0.2); border: 1px dashed rgba(255,255,255,0.5); cursor: text; }
         input:read-only { cursor: default; outline: none; }
 
@@ -257,7 +263,7 @@
             <span id="currentModeBadge" class="status-badge">載入中...</span>
             <button id="btnSyncToggle" class="btn btn-sync admin-only" onclick="toggleSync()">連線中</button>
             <button class="btn btn-edit admin-only" onclick="toggleForceMode()">強制切換模式</button>
-            <button class="btn btn-edit" onclick="logout()" style="background:#e74c3c; color:white;">登出</button>
+            <button class="btn btn-logout" onclick="logout()">登出</button>
         </div>
     </header>
 
@@ -352,11 +358,18 @@
     </div>
 
     <script>
+        // ================= 使用者設定區 (User Config) =================
         const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQACAdB7m2Bb2uYz7aIHU5TdXo5254vD0lpaKBkkyw621OEPW0hzHMdcFa5isuUDotgbFq7GRFghl9c/pub?output=csv";
-        const PASSWORDS = { ADMIN: '1005', STUDENT: '1630' };
+        
+        // [設定] 請在此處修改密碼
+        const PASSWORDS = { 
+            ADMIN: '1005',   // 老師 (管理者)
+            STUDENT: '1630'  // 學生/監考
+        };
+        // ============================================================
+
         let currentUserRole = null;
         let isForceMode = false;
-        // [新增] 暫停同步旗標
         let isSyncPaused = false;
         
         const DEFAULT_ANNOUNCEMENT = `考試期間請遵守以下規定：
@@ -381,9 +394,8 @@
             window.addEventListener('resize', setDocHeight);
 
             if(GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.length > 10) {
-                fetchGoogleSheetData(); // 初次載入
+                fetchGoogleSheetData();
                 setInterval(() => {
-                    // [修改] 如果暫停同步，就不執行 fetch
                     if (!isSyncPaused) fetchGoogleSheetData();
                 }, 60000);
             } else {
@@ -403,18 +415,22 @@
             document.body.style.height = `calc(var(--vh, 1vh) * 100)`;
         }
 
-        // [新增] 切換同步狀態
+        // [修改] 暫停同步需驗證密碼
         function toggleSync() {
-            isSyncPaused = !isSyncPaused;
-            const btn = document.getElementById('btnSyncToggle');
-            if(isSyncPaused) {
-                btn.textContent = "已暫停";
-                btn.classList.add('paused');
+            const input = prompt("請輸入管理者密碼以變更連線狀態：");
+            if (input === PASSWORDS.ADMIN) {
+                isSyncPaused = !isSyncPaused;
+                const btn = document.getElementById('btnSyncToggle');
+                if(isSyncPaused) {
+                    btn.textContent = "已暫停";
+                    btn.classList.add('paused');
+                } else {
+                    btn.textContent = "連線中";
+                    btn.classList.remove('paused');
+                    fetchGoogleSheetData();
+                }
             } else {
-                btn.textContent = "連線中";
-                btn.classList.remove('paused');
-                // 恢復連線時立刻抓取一次
-                fetchGoogleSheetData();
+                alert("密碼錯誤，無法變更狀態");
             }
         }
 
@@ -478,7 +494,6 @@
                     const m = now.getMinutes();
                     const s = now.getSeconds();
                     if (m % 10 === 0 && s < 30) {
-                        // [修正] 文字微調
                         activeAlert = { type: 'warning', text: '<h1>請保持安靜<br>打起精神<br>專心看書</h1>', blink: false, size: 'h-50' };
                     }
                 }
@@ -669,6 +684,7 @@
             document.getElementById('loginOverlay').classList.add('hidden');
             document.body.classList.remove('role-admin', 'role-student');
             document.body.classList.add(`role-${role}`);
+            // 解除應到人數鎖定 (對所有人開放，或依需求調整)
             document.getElementById('shouldVal').removeAttribute('readonly'); 
         }
 
@@ -764,7 +780,6 @@
             fetch(urlWithNoCache, {cache: "no-store"})
             .then(response => response.text())
             .then(csvText => {
-                // [修改] 如果正在操作 Modal / Input / 或是「暫停連線」中，就不更新
                 if (isSyncPaused || document.getElementById('seatModal').style.display === 'flex' || document.activeElement.tagName === 'INPUT') return;
 
                 const rows = csvText.split('\n').map(row => row.split(','));
