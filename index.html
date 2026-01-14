@@ -28,7 +28,7 @@
             position: fixed; top: 0; left: 0;
         }
 
-        /* 登入遮罩 (最高層級) */
+        /* 登入遮罩 */
         #loginOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(238, 242, 230, 0.98);
@@ -37,33 +37,26 @@
         }
         #loginOverlay.hidden { opacity: 0; pointer-events: none; }
         
-        /* 學生通知遮罩 (背景透明，不擋點擊) */
+        /* 學生通知遮罩 */
         #studentOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 2000; /* 比內容高 */
-            pointer-events: none; /* 關鍵：讓點擊穿透背景 */
-            opacity: 0; transition: opacity 0.3s;
+            z-index: 2000; pointer-events: none; opacity: 0; transition: opacity 0.3s;
         }
         #studentOverlay.active { opacity: 1; }
 
-        /* 訊息橫幅 */
+        /* 訊息橫幅 (統一黃底黑字) */
         .overlay-message {
             width: 100%; display: flex; justify-content: center; align-items: center; text-align: center;
             box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-            pointer-events: auto; /* 橫幅本身可阻擋點擊(如果需要) */
+            pointer-events: auto; 
+            background: var(--warning-yellow); color: #000; /* 統一配色 */
             animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        .overlay-message h1 { font-size: clamp(2rem, 5vw, 4rem); margin: 0; font-weight: 900; line-height: 1.3; }
 
         .h-33 { height: 33vh; }
         .h-50 { height: 50vh; }
-
-        .style-warning { background: var(--warning-yellow); color: #000; }
-        .style-warning h1 { font-size: clamp(2rem, 5vw, 4rem); margin: 0; font-weight: 900; line-height: 1.3; }
-
-        .style-info { background: var(--primary-color); color: #FFF; }
-        .style-info h1 { font-size: clamp(2rem, 5vw, 4rem); margin: 0; font-weight: 900; line-height: 1.3; }
-
         .blink-effect { animation: blink-text 0.8s infinite; }
 
         /* 登入框 */
@@ -78,7 +71,7 @@
             border-radius: 8px; cursor: pointer;
         }
 
-        /* 頂部標題列 (層級調高至 3000，高於 studentOverlay) */
+        /* 標題列 */
         header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 0 15px; background: var(--card-bg);
@@ -139,19 +132,17 @@
             overflow-y: auto; flex: 1; padding-right: 5px;
         }
         
-        /* Hurry 圖片 (預設隱藏) */
+        /* Hurry 圖片 */
         #hurryImageContainer {
             margin-top: 5px; display: none; justify-content: center; align-items: center; height: 40%; 
         }
-        /* 滿版覆蓋樣式 */
         #hurryImageContainer.expanded {
             display: flex !important;
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.98); 
-            z-index: 50; /* 蓋住公告文字 */
+            background: rgba(255,255,255,0.98); z-index: 50; 
             margin: 0; border-radius: 12px; padding: 10px;
         }
-        #hurryImage { max-height: 100%; max-width: 100%; border-radius: 12px; object-fit: contain; transition: all 0.3s ease; }
+        #hurryImage { max-height: 100%; max-width: 100%; border-radius: 12px; object-fit: contain; }
 
         /* 考程 */
         #scheduleCard { height: 100%; min-height: 0; }
@@ -161,7 +152,7 @@
         tr.past-row td { color: var(--text-light); font-weight: normal; }
         tr.current-row { background-color: rgba(107, 142, 136, 0.15); border-left: 4px solid var(--primary-color); }
 
-        /* 出缺席 (層級調高至 3000，確保可點擊) */
+        /* 出缺席 */
         #attendanceCard {
             height: 140px; flex-shrink: 0; 
             display: flex; flex-direction: column; justify-content: center; 
@@ -169,48 +160,28 @@
             position: relative; border-radius: 12px; gap: 10px; 
             z-index: 3000; 
         }
-        
         .att-top-row { display: flex; justify-content: space-evenly; align-items: center; width: 100%; height: 50%; }
         .att-item-container { display: flex; justify-content: center; align-items: center; gap: 10px; }
         .att-label { font-size: 1.4rem; opacity: 0.95; white-space: nowrap; }
-        .att-val { 
-            font-size: 2.2rem; font-weight: bold; width: 70px; text-align: center;
-            background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px;
-            padding: 0px;
-        }
+        .att-val { font-size: 2.2rem; font-weight: bold; width: 70px; text-align: center; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px; padding: 0px; }
         .att-unit { font-size: 1.1rem; margin-left: 5px; opacity: 0.8; }
         
         .att-bottom-row { display: flex; justify-content: center; align-items: center; width: 100%; height: 50%; gap: 10px; }
         .input-wrapper { display: flex; align-items: center; gap: 5px; flex: 1; max-width: 600px; }
         #absentVal { flex: 1; text-align: left; padding-left: 15px; font-size: 1.4rem; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px; height: 45px; }
-        
         .btn-picker { background: #F2CC8F; color: #333; font-weight: bold; height: 45px; padding: 0 15px; border-radius: 8px; border: none; cursor: pointer; font-size: 1rem; white-space: nowrap; display: none; }
         .signature { position: absolute; bottom: 5px; right: 10px; font-size: 0.9rem; color: rgba(255,255,255,0.8); font-weight: normal; letter-spacing: 1px; }
 
-        /* [修正6] 緊湊型 10欄 座號選擇器 */
+        /* 選號器 */
         #seatModal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 6000; justify-content: center; align-items: center; }
-        .seat-grid-container { 
-            background: white; padding: 15px; border-radius: 15px; width: 95%; max-width: 600px; 
-            max-height: 95vh; display: flex; flex-direction: column; 
-        }
+        .seat-grid-container { background: white; padding: 15px; border-radius: 15px; width: 95%; max-width: 600px; max-height: 95vh; display: flex; flex-direction: column; }
         .seat-header { display: flex; justify-content: center; margin-bottom: 10px; color: var(--primary-color); font-size: 1.2rem; font-weight: bold; }
         
-        /* 10欄位 Grid */
-        .seat-grid { 
-            display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; margin: 0; 
-            flex: 1; overflow-y: auto; 
-        }
-        .seat-btn { 
-            aspect-ratio: 1; /* 正方形 */
-            display: flex; justify-content: center; align-items: center;
-            font-size: 1rem; border-radius: 4px; border: 1px solid #ddd; 
-            background: white; cursor: pointer; color: #333; 
-        }
+        .seat-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; margin: 0; flex: 1; overflow-y: auto; }
+        .seat-btn { aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-size: 1rem; border-radius: 4px; border: 1px solid #ddd; background: white; cursor: pointer; color: #333; }
         .seat-btn.selected { background: var(--danger-color); color: white; border-color: var(--danger-color); }
         
-        .seat-footer {
-            margin-top: 15px; display: flex; justify-content: space-between; align-items: center;
-        }
+        .seat-footer { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
         .btn-clear { background: #e74c3c; color: white; padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
         .btn-confirm { background: var(--primary-color); color: white; padding: 8px 25px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; margin-right: 10px;}
         .btn-cancel { background: #ccc; color: #333; padding: 8px 25px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
@@ -377,15 +348,7 @@
 4. 桌面僅留下必要的文具用品。
 5. 考試期間請勿交談。`;
 
-        const DEFAULT_SCHEDULE = [
-            { start: "08:20", end: "09:10", subject: "第一節", note: "" },
-            { start: "09:20", end: "10:10", subject: "第二節", note: "" },
-            { start: "10:20", end: "11:10", subject: "第三節", note: "" },
-            { start: "11:20", end: "12:10", subject: "第四節", note: "" },
-            { start: "13:10", end: "14:00", subject: "第五節", note: "" },
-            { start: "14:10", end: "15:00", subject: "第六節", note: "" },
-            { start: "15:10", end: "16:00", subject: "第七節", note: "" }
-        ];
+        const DEFAULT_SCHEDULE = [];
 
         let appData = {
             schedule: JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)),
@@ -435,13 +398,13 @@
             const msgBox = document.getElementById('overlayMessage');
             let activeAlert = null; 
 
-            // 1. 打掃
+            // 1. 打掃 (統一用 style-warning)
             if(appData.schedule.length > 0) {
                 const lastItem = appData.schedule[appData.schedule.length - 1];
                 const [eH, eM] = lastItem.end.split(':').map(Number);
                 const endTime = new Date(); endTime.setHours(eH, eM, 0);
                 if(now >= endTime && now < new Date(endTime.getTime() + 10*60000)) {
-                    activeAlert = { type: 'info', text: '<h1>請開始進行<br>打掃工作</h1>', blink: false, size: 'h-50' };
+                    activeAlert = { type: 'warning', text: '<h1>請開始進行<br>打掃工作</h1>', blink: false, size: 'h-50' };
                 }
             }
 
@@ -482,7 +445,7 @@
                     const m = now.getMinutes();
                     const s = now.getSeconds();
                     if (m % 10 === 0 && s < 30) {
-                        activeAlert = { type: 'info', text: '<h1>請保持安靜<br>打起精神<br>專心看書！</h1>', blink: false, size: 'h-50' };
+                        activeAlert = { type: 'warning', text: '<h1>請保持安靜<br>打起精神<br>專心看書！</h1>', blink: false, size: 'h-50' };
                     }
                 }
             }
@@ -490,7 +453,8 @@
             if(activeAlert) {
                 overlay.className = 'active'; 
                 msgBox.innerHTML = activeAlert.text;
-                msgBox.className = `overlay-message ${activeAlert.type === 'warning' ? 'style-warning' : 'style-info'} ${activeAlert.size}`;
+                // 全部統一使用 style-warning (黃底黑字)
+                msgBox.className = `overlay-message style-warning ${activeAlert.size}`;
                 if(activeAlert.blink) msgBox.classList.add('blink-effect');
             } else {
                 overlay.className = ''; 
@@ -524,13 +488,18 @@
             const infoCard = document.getElementById('infoCard');
             const colLeft = document.getElementById('colLeft');
             const colRight = document.getElementById('colRight');
+            const scheduleCard = document.getElementById('scheduleCard');
 
             if (isExamining) {
                 if(!body.classList.contains('mode-exam')) {
                     body.classList.remove('mode-study');
                     body.classList.add('mode-exam');
-                    colRight.appendChild(infoCard);
-                    infoCard.style.display = 'flex'; infoCard.style.height = '100%'; 
+                    
+                    // 強制版面調整
+                    scheduleCard.style.display = 'none'; // 隱藏考程
+                    colRight.appendChild(infoCard); // 公告移到右邊
+                    infoCard.style.display = 'flex'; 
+                    infoCard.style.height = '100%'; 
                 }
                 badge.textContent = `考試中：${currentSubject}`;
                 handleCountdown(remainingSec);
@@ -538,7 +507,10 @@
                 if(!body.classList.contains('mode-study')) {
                     body.classList.remove('mode-exam');
                     body.classList.add('mode-study');
-                    colLeft.appendChild(infoCard);
+                    
+                    // 強制版面還原
+                    colLeft.appendChild(infoCard); // 公告移回左邊
+                    scheduleCard.style.display = 'flex'; // 顯示考程
                 }
                 badge.textContent = "自習/下課時段";
                 document.getElementById('countdownArea').style.display = 'none';
@@ -559,18 +531,18 @@
                 area.style.display = 'block';
                 const mins = Math.ceil(remainingSec / 60);
                 
-                // [修正4] Hurry 圖片滿版
                 if (currentUserRole === 'student') {
-                    if (remainingSec > 120) {
-                        imgContainer.style.display = 'none';
-                        imgContainer.classList.remove('expanded');
-                    } else if (remainingSec > 60) {
-                        imgContainer.style.display = 'flex';
-                        imgContainer.classList.remove('expanded');
-                    } else {
+                    if (remainingSec <= 60) {
+                        // < 1 min: 滿版
                         imgContainer.style.display = 'flex';
                         imgContainer.classList.add('expanded');
+                    } else {
+                        // > 1 min: 隱藏 (您說不要從小變大，直接滿版)
+                        imgContainer.style.display = 'none';
+                        imgContainer.classList.remove('expanded');
                     }
+                } else {
+                    imgContainer.style.display = 'none'; // 老師端不顯示
                 }
 
                 if (mins > 1) {
@@ -670,17 +642,12 @@
             isForceMode = !isForceMode;
             if(document.body.classList.contains('mode-exam')) {
                 document.body.classList.remove('mode-exam'); 
-                document.body.classList.add('mode-study');
-                document.getElementById('colLeft').appendChild(document.getElementById('infoCard'));
-                document.getElementById('scheduleCard').style.display = 'flex';
-                document.getElementById('timeDisclaimer').style.display = 'none';
+                body.classList.add('mode-study');
+                checkScheduleMode(new Date()); // 強制刷新版面
             } else {
                 document.body.classList.remove('mode-study'); 
                 document.body.classList.add('mode-exam');
-                document.getElementById('colRight').appendChild(document.getElementById('infoCard'));
-                document.getElementById('scheduleCard').style.display = 'none';
-                document.getElementById('infoCard').style.display = 'flex';
-                document.getElementById('timeDisclaimer').style.display = 'block';
+                checkScheduleMode(new Date()); // 強制刷新版面
             }
             document.getElementById('currentModeBadge').textContent = isForceMode ? "手動模式" : "自動模式";
         }
@@ -758,7 +725,7 @@
             }
         }
 
-        // [修正3] 解析所有行數
+        // [核心修正] 強力公告解析：抓取標題列之前的所有內容
         function fetchGoogleSheetData() {
             const urlWithNoCache = GOOGLE_SHEET_CSV_URL + "&t=" + Date.now();
             const statusLight = document.getElementById('syncStatus');
@@ -772,7 +739,7 @@
                     statusLight.classList.add('active'); 
                     setTimeout(() => statusLight.classList.remove('active'), 1000);
 
-                    // 找出標題列位置
+                    // 1. 抓考程標題列位置
                     let headerIndex = -1;
                     for(let i=0; i<rows.length; i++) {
                         const rowStr = rows[i].join('').toLowerCase();
@@ -781,18 +748,24 @@
                         }
                     }
                     
-                    // 抓取 Header 之前的所有內容當作公告
+                    // 2. 抓公告 (Header 之前的所有列)
                     let announcementLines = [];
                     const limit = (headerIndex !== -1) ? headerIndex : 1;
+                    
                     for(let i=0; i<limit; i++) {
-                        let line = rows[i][0].replace(/^"|"$/g, '').replace(/""/g, '"');
+                        // 移除 CSV 格式的引號，並處理手動輸入的 \n 字串
+                        let line = rows[i][0]
+                            .replace(/^"|"$/g, '')
+                            .replace(/""/g, '"')
+                            .replace(/\\n/g, '\n'); // [修正] 將 \n 字串轉為換行符號
+                        
                         if(line.trim() !== "") announcementLines.push(line);
                     }
                     if(announcementLines.length > 0) {
                         appData.announcement = announcementLines.join('\n');
                     }
 
-                    // 抓取考程
+                    // 3. 抓考程
                     const startIndex = (headerIndex !== -1) ? headerIndex + 1 : 2;
                     const newSchedule = [];
                     for(let i=startIndex; i<rows.length; i++) {
