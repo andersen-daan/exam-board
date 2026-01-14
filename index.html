@@ -13,7 +13,7 @@
             --text-light: #B0B0B0;
             --danger-color: #E07A5F; 
             --clock-color: #2F3E46;
-            --warning-yellow: #F4D35E; /* 預備鐘黃色 */
+            --warning-yellow: #F4D35E; 
         }
 
         * { box-sizing: border-box; }
@@ -21,15 +21,10 @@
         body {
             font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
             background-color: var(--bg-color);
-            margin: 0; 
-            padding: 15px;
-            padding-bottom: 25px; 
+            margin: 0; padding: 15px; padding-bottom: 25px; 
             color: var(--text-main);
-            height: 100vh;
-            height: 100dvh; /* 適應大屏 */
-            width: 100vw;
-            display: flex; flex-direction: column;
-            overflow: hidden; 
+            height: 100vh; height: 100dvh; width: 100vw;
+            display: flex; flex-direction: column; overflow: hidden; 
             position: fixed; top: 0; left: 0;
         }
 
@@ -37,14 +32,12 @@
         #loginOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(238, 242, 230, 0.98);
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            z-index: 5000; /* 最高 */
-            transition: opacity 0.5s;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 6000; transition: opacity 0.5s;
         }
         #loginOverlay.hidden { opacity: 0; pointer-events: none; }
         
-        /* 學生通知遮罩 (修正：背景透明，不擋點擊) */
+        /* 學生通知遮罩 (背景透明，不擋點擊) */
         #studentOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -54,25 +47,20 @@
         }
         #studentOverlay.active { opacity: 1; }
 
-        /* 訊息橫幅 (Banner) 樣式 */
+        /* 訊息橫幅 */
         .overlay-message {
-            width: 100%; /* 橫跨全螢幕 */
-            display: flex; justify-content: center; align-items: center; text-align: center;
+            width: 100%; display: flex; justify-content: center; align-items: center; text-align: center;
             box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-            pointer-events: auto; /* 橫幅本身可阻擋點擊 */
+            pointer-events: auto; /* 橫幅本身可阻擋點擊(如果需要) */
             animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* 高度控制 */
         .h-33 { height: 33vh; }
         .h-50 { height: 50vh; }
 
-        /* 風格控制 */
-        /* 1. 警告風格 (黃底黑字) */
         .style-warning { background: var(--warning-yellow); color: #000; }
         .style-warning h1 { font-size: clamp(2rem, 5vw, 4rem); margin: 0; font-weight: 900; line-height: 1.3; }
 
-        /* 2. 資訊風格 (深綠底白字) */
         .style-info { background: var(--primary-color); color: #FFF; }
         .style-info h1 { font-size: clamp(2rem, 5vw, 4rem); margin: 0; font-weight: 900; line-height: 1.3; }
 
@@ -90,16 +78,13 @@
             border-radius: 8px; cursor: pointer;
         }
 
-        /* 頂部標題列 (層級調高) */
+        /* 頂部標題列 (層級調高至 3000，高於 studentOverlay) */
         header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 0 15px; background: var(--card-bg);
             border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            margin-bottom: 8px; 
-            flex-shrink: 0;
-            height: 50px;
-            z-index: 3000; /* 確保不被橫幅遮住 */
-            position: relative;
+            margin-bottom: 8px; flex-shrink: 0; height: 50px;
+            z-index: 3000; position: relative;
         }
         h1 { margin: 0; font-size: 1.6rem; color: var(--primary-color); letter-spacing: 2px; line-height: 50px; }
         .controls { display: flex; gap: 8px; align-items: center; }
@@ -138,22 +123,16 @@
             justify-content: center; align-items: center; text-align: center;
             flex-shrink: 0; position: relative; min-height: 120px;
         }
-        #timeDisplay { 
-            font-family: 'Courier New', monospace; font-weight: bold; 
-            color: var(--clock-color); line-height: 1; white-space: nowrap;
-        }
+        #timeDisplay { font-family: 'Courier New', monospace; font-weight: bold; color: var(--clock-color); line-height: 1; white-space: nowrap; }
         #dateDisplay { font-size: 1.8rem; font-weight: bold; margin-top: 5px; color: var(--primary-color); }
-        #timeDisclaimer {
-            position: absolute; bottom: 5px; right: 10px;
-            font-size: 1rem; color: #444; display: none; font-weight: bold; text-align: right;
-        }
+        #timeDisclaimer { position: absolute; bottom: 5px; right: 10px; font-size: 1rem; color: #444; display: none; font-weight: bold; text-align: right; }
 
         #countdownArea { width: 100%; margin-top: 5px; display: none; }
         .progress-container { width: 100%; height: 15px; background-color: #eee; border-radius: 12px; overflow: hidden; margin-top: 5px; }
         .progress-bar { height: 100%; width: 100%; background-color: var(--danger-color); transition: width 1s linear; }
         #countdownText { font-size: 1.3rem; font-weight: bold; color: var(--danger-color); display: block; }
 
-        /* 公告 (修正：確保被覆蓋時不顯示捲軸) */
+        /* 公告 */
         #infoCard { flex: 1; min-height: 0; position: relative; }
         #announcementContent {
             white-space: pre-line; font-size: 1.3rem; line-height: 1.4; color: #444;
@@ -164,11 +143,12 @@
         #hurryImageContainer {
             margin-top: 5px; display: none; justify-content: center; align-items: center; height: 40%; 
         }
-        /* [修正4] 滿版覆蓋樣式 */
+        /* 滿版覆蓋樣式 */
         #hurryImageContainer.expanded {
             display: flex !important;
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.98); z-index: 50; /* 蓋住所有內容 */
+            background: rgba(255,255,255,0.98); 
+            z-index: 50; /* 蓋住公告文字 */
             margin: 0; border-radius: 12px; padding: 10px;
         }
         #hurryImage { max-height: 100%; max-width: 100%; border-radius: 12px; object-fit: contain; transition: all 0.3s ease; }
@@ -181,13 +161,13 @@
         tr.past-row td { color: var(--text-light); font-weight: normal; }
         tr.current-row { background-color: rgba(107, 142, 136, 0.15); border-left: 4px solid var(--primary-color); }
 
-        /* 出缺席 (層級調高，確保可點擊) */
+        /* 出缺席 (層級調高至 3000，確保可點擊) */
         #attendanceCard {
             height: 140px; flex-shrink: 0; 
             display: flex; flex-direction: column; justify-content: center; 
             padding: 5px 25px; background: var(--primary-color); color: white;
             position: relative; border-radius: 12px; gap: 10px; 
-            z-index: 3000; /* 確保浮在最上層 */
+            z-index: 3000; 
         }
         
         .att-top-row { display: flex; justify-content: space-evenly; align-items: center; width: 100%; height: 50%; }
@@ -207,15 +187,18 @@
         .btn-picker { background: #F2CC8F; color: #333; font-weight: bold; height: 45px; padding: 0 15px; border-radius: 8px; border: none; cursor: pointer; font-size: 1rem; white-space: nowrap; display: none; }
         .signature { position: absolute; bottom: 5px; right: 10px; font-size: 0.9rem; color: rgba(255,255,255,0.8); font-weight: normal; letter-spacing: 1px; }
 
-        /* [修正6] 座號選擇器 Modal + 緊湊版面 */
+        /* [修正6] 緊湊型 10欄 座號選擇器 */
         #seatModal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 6000; justify-content: center; align-items: center; }
-        .seat-grid-container { background: white; padding: 15px; border-radius: 15px; width: 95%; max-width: 500px; max-height: 90vh; display:flex; flex-direction: column; }
+        .seat-grid-container { 
+            background: white; padding: 15px; border-radius: 15px; width: 95%; max-width: 600px; 
+            max-height: 95vh; display: flex; flex-direction: column; 
+        }
         .seat-header { display: flex; justify-content: center; margin-bottom: 10px; color: var(--primary-color); font-size: 1.2rem; font-weight: bold; }
         
-        /* 10欄 Grid */
+        /* 10欄位 Grid */
         .seat-grid { 
-            display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; margin: 0; 
-            flex: 1; overflow-y: auto; /* 如果還是太高可捲動 */
+            display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; margin: 0; 
+            flex: 1; overflow-y: auto; 
         }
         .seat-btn { 
             aspect-ratio: 1; /* 正方形 */
@@ -225,13 +208,18 @@
         }
         .seat-btn.selected { background: var(--danger-color); color: white; border-color: var(--danger-color); }
         
-        /* 底部按鈕區 */
         .seat-footer {
             margin-top: 15px; display: flex; justify-content: space-between; align-items: center;
         }
         .btn-clear { background: #e74c3c; color: white; padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
         .btn-confirm { background: var(--primary-color); color: white; padding: 8px 25px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; margin-right: 10px;}
         .btn-cancel { background: #ccc; color: #333; padding: 8px 25px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+
+        /* 編輯器 */
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 6000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 600px; max-height: 80vh; overflow-y: auto; }
+        .edit-row { display: grid; grid-template-columns: 1fr 1fr 1.5fr 1fr auto; gap: 5px; margin-bottom: 10px; }
+        .edit-row input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%; }
 
         /* 模式切換 */
         body.mode-study .left-column { width: 50%; }
@@ -251,12 +239,6 @@
         body.role-admin .btn-picker, body.role-student .btn-picker { display: block !important; } 
         input:not(:read-only) { background: rgba(255,255,255,0.2); border: 1px dashed rgba(255,255,255,0.5); cursor: text; }
         input:read-only { cursor: default; outline: none; }
-        
-        /* 一般編輯器 */
-        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 6000; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 600px; max-height: 80vh; overflow-y: auto; }
-        .edit-row { display: grid; grid-template-columns: 1fr 1fr 1.5fr 1fr auto; gap: 5px; margin-bottom: 10px; }
-        .edit-row input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.05); } 100% { transform: scale(1); } }
@@ -336,7 +318,7 @@
         <div class="att-top-row">
             <div class="att-item-container">
                 <span class="att-label">應到</span>
-                <input type="number" id="shouldVal" class="att-val admin-only-edit" value="37" onchange="manualUpdateAttendance()">
+                <input type="number" id="shouldVal" class="att-val" value="37" onchange="manualUpdateAttendance()">
                 <span class="att-unit">人</span>
             </div>
             <div class="att-item-container">
@@ -577,7 +559,7 @@
                 area.style.display = 'block';
                 const mins = Math.ceil(remainingSec / 60);
                 
-                // [修正4] Hurry 圖片 (滿版邏輯)
+                // [修正4] Hurry 圖片滿版
                 if (currentUserRole === 'student') {
                     if (remainingSec > 120) {
                         imgContainer.style.display = 'none';
@@ -587,7 +569,7 @@
                         imgContainer.classList.remove('expanded');
                     } else {
                         imgContainer.style.display = 'flex';
-                        imgContainer.classList.add('expanded'); // 滿版
+                        imgContainer.classList.add('expanded');
                     }
                 }
 
@@ -680,19 +662,12 @@
             document.getElementById('loginOverlay').classList.add('hidden');
             document.body.classList.remove('role-admin', 'role-student');
             document.body.classList.add(`role-${role}`);
-            
-            // [修正5] 強制移除唯讀，確保可輸入
-            const shouldInput = document.getElementById('shouldVal');
-            shouldInput.removeAttribute('readonly'); 
-            // 如果是學生才加回去
-            if(role === 'student') shouldInput.setAttribute('readonly', true);
         }
 
         function logout() { localStorage.removeItem('role'); location.reload(); }
         
         function toggleForceMode() {
             isForceMode = !isForceMode;
-            const now = new Date();
             if(document.body.classList.contains('mode-exam')) {
                 document.body.classList.remove('mode-exam'); 
                 document.body.classList.add('mode-study');
@@ -783,7 +758,7 @@
             }
         }
 
-        // [修正3] 強力解析器：抓取 Header 之前的所有文字
+        // [修正3] 解析所有行數
         function fetchGoogleSheetData() {
             const urlWithNoCache = GOOGLE_SHEET_CSV_URL + "&t=" + Date.now();
             const statusLight = document.getElementById('syncStatus');
@@ -797,7 +772,7 @@
                     statusLight.classList.add('active'); 
                     setTimeout(() => statusLight.classList.remove('active'), 1000);
 
-                    // 1. 抓公告 (從第1行開始，直到遇到標題列)
+                    // 找出標題列位置
                     let headerIndex = -1;
                     for(let i=0; i<rows.length; i++) {
                         const rowStr = rows[i].join('').toLowerCase();
@@ -806,21 +781,18 @@
                         }
                     }
                     
+                    // 抓取 Header 之前的所有內容當作公告
                     let announcementLines = [];
-                    // 如果有標題列，抓上面的；如果沒有，只抓第一行
                     const limit = (headerIndex !== -1) ? headerIndex : 1;
-                    
                     for(let i=0; i<limit; i++) {
-                        // 移除 CSV 雙引號與處理換行
                         let line = rows[i][0].replace(/^"|"$/g, '').replace(/""/g, '"');
                         if(line.trim() !== "") announcementLines.push(line);
                     }
-                    
                     if(announcementLines.length > 0) {
                         appData.announcement = announcementLines.join('\n');
                     }
 
-                    // 2. 抓考程
+                    // 抓取考程
                     const startIndex = (headerIndex !== -1) ? headerIndex + 1 : 2;
                     const newSchedule = [];
                     for(let i=startIndex; i<rows.length; i++) {
