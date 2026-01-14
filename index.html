@@ -13,7 +13,7 @@
             --text-light: #B0B0B0;
             --danger-color: #E07A5F; 
             --clock-color: #2F3E46;
-            --warning-yellow: #F4D35E; /* 統一警告色 */
+            --warning-yellow: #F4D35E; 
         }
 
         * { box-sizing: border-box; }
@@ -28,7 +28,7 @@
             position: fixed; top: 0; left: 0;
         }
 
-        /* 登入遮罩 (最高層級) */
+        /* 登入遮罩 */
         #loginOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(238, 242, 230, 0.98);
@@ -37,7 +37,7 @@
         }
         #loginOverlay.hidden { opacity: 0; pointer-events: none; }
         
-        /* 學生通知遮罩 (背景透明，不擋點擊) */
+        /* 學生通知遮罩 */
         #studentOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -46,12 +46,11 @@
         }
         #studentOverlay.active { opacity: 1; }
 
-        /* 訊息橫幅 (統一黃底黑字，確保可見) */
         .overlay-message {
             width: 100%; display: flex; justify-content: center; align-items: center; text-align: center;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             pointer-events: auto;
-            background: var(--warning-yellow); color: #000; /* [修正] 統一配色 */
+            background: var(--warning-yellow); color: #000; 
             animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .overlay-message h1 { font-size: clamp(2rem, 5vw, 4rem); margin: 0; font-weight: 900; line-height: 1.3; }
@@ -60,7 +59,6 @@
         .h-50 { height: 50vh; }
         .blink-effect { animation: blink-text 0.8s infinite; }
 
-        /* 登入框 */
         .login-box input {
             padding: 15px; font-size: 28px; text-align: center;
             border: 2px solid var(--primary-color); border-radius: 12px;
@@ -72,7 +70,6 @@
             border-radius: 8px; cursor: pointer;
         }
 
-        /* 頂部標題列 */
         header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 0 15px; background: var(--card-bg);
@@ -86,7 +83,6 @@
         #syncStatus { width: 10px; height: 10px; border-radius: 50%; background: #ccc; display: inline-block; margin-right: 5px; }
         #syncStatus.active { background: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
 
-        /* 主佈局 */
         #mainContainer {
             display: flex; flex-direction: row; gap: 12px; flex: 1; min-height: 0; 
             margin-bottom: 15px; overflow: hidden;
@@ -112,7 +108,6 @@
         .btn-edit { background: #eee; color: #555; }
         .btn-save { background: var(--primary-color); color: white; }
 
-        /* 時鐘 */
         #clockCard { 
             justify-content: center; align-items: center; text-align: center;
             flex-shrink: 0; position: relative; min-height: 120px;
@@ -126,18 +121,15 @@
         .progress-bar { height: 100%; width: 100%; background-color: var(--danger-color); transition: width 1s linear; }
         #countdownText { font-size: 1.3rem; font-weight: bold; color: var(--danger-color); display: block; }
 
-        /* 公告 */
         #infoCard { flex: 1; min-height: 0; position: relative; }
         #announcementContent {
             white-space: pre-line; font-size: 1.3rem; line-height: 1.3; color: #444;
             overflow-y: auto; flex: 1; padding-right: 5px;
         }
         
-        /* Hurry 圖片 */
         #hurryImageContainer {
             margin-top: 5px; display: none; justify-content: center; align-items: center; height: 40%; 
         }
-        /* 滿版覆蓋樣式 */
         #hurryImageContainer.expanded {
             display: flex !important;
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -146,17 +138,14 @@
         }
         #hurryImage { max-height: 100%; max-width: 100%; border-radius: 12px; object-fit: contain; transition: all 0.3s ease; }
 
-        /* 考程 */
         #scheduleCard { height: 100%; min-height: 0; }
         table { width: 100%; border-collapse: collapse; margin-top: 0; }
         th { text-align: left; color: #666; border-bottom: 2px solid #eee; padding: 6px; font-size: 0.9rem; position: sticky; top: 0; background: white;}
         td { padding: 8px 6px; border-bottom: 1px solid #f5f5f5; font-size: 1.05rem; color: var(--text-main); font-weight: bold;}
         tr.past-row td { color: var(--text-light); font-weight: normal; }
         tr.current-row { background-color: rgba(107, 142, 136, 0.15); border-left: 4px solid var(--primary-color); }
-        /* [修正] 初始載入提示 */
         tr.loading-row td { text-align: center; color: var(--text-light); padding: 20px; }
 
-        /* 出缺席 (層級 3000) */
         #attendanceCard {
             height: 140px; flex-shrink: 0; 
             display: flex; flex-direction: column; justify-content: center; 
@@ -177,10 +166,10 @@
         .att-bottom-row { display: flex; justify-content: center; align-items: center; width: 100%; height: 50%; gap: 10px; }
         .input-wrapper { display: flex; align-items: center; gap: 5px; flex: 1; max-width: 600px; }
         #absentVal { flex: 1; text-align: left; padding-left: 15px; font-size: 1.4rem; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px; height: 45px; }
+        
         .btn-picker { background: #F2CC8F; color: #333; font-weight: bold; height: 45px; padding: 0 15px; border-radius: 8px; border: none; cursor: pointer; font-size: 1rem; white-space: nowrap; display: none; }
         .signature { position: absolute; bottom: 5px; right: 10px; font-size: 0.9rem; color: rgba(255,255,255,0.8); font-weight: normal; letter-spacing: 1px; }
 
-        /* 座號選擇器 (10欄) */
         #seatModal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 6000; justify-content: center; align-items: center; }
         .seat-grid-container { 
             background: white; padding: 15px; border-radius: 15px; width: 95%; max-width: 700px; 
@@ -193,25 +182,21 @@
             flex: 1; overflow-y: auto; 
         }
         .seat-btn { 
-            aspect-ratio: 1.2; 
-            display: flex; justify-content: center; align-items: center;
+            aspect-ratio: 1.2; display: flex; justify-content: center; align-items: center;
             font-size: 1.1rem; border-radius: 6px; border: 1px solid #ddd; 
             background: white; cursor: pointer; color: #333; 
         }
         .seat-btn.selected { background: var(--danger-color); color: white; border-color: var(--danger-color); }
-        
         .seat-footer { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
         .btn-clear { background: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
         .btn-confirm { background: var(--primary-color); color: white; padding: 10px 30px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; margin-right: 10px;}
         .btn-cancel { background: #ccc; color: #333; padding: 10px 30px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
 
-        /* 編輯器 */
         .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 6000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 25px; border-radius: 15px; width: 600px; max-height: 80vh; overflow-y: auto; }
         .edit-row { display: grid; grid-template-columns: 1fr 1fr 1.5fr 1fr auto; gap: 5px; margin-bottom: 10px; }
         .edit-row input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%; }
 
-        /* 模式切換 */
         body.mode-study .left-column { width: 50%; }
         body.mode-study .right-column { width: 50%; }
         body.mode-study #clockCard { height: auto; padding: 10px; flex-shrink: 0; }
@@ -227,6 +212,10 @@
 
         body.role-admin .admin-only { display: inline-block !important; }
         body.role-admin .btn-picker, body.role-student .btn-picker { display: block !important; } 
+        
+        /* [修正1] 學生模式強制隱藏所有編輯按鈕 */
+        body.role-student .btn-edit { display: none !important; }
+
         input:not(:read-only) { background: rgba(255,255,255,0.2); border: 1px dashed rgba(255,255,255,0.5); cursor: text; }
         input:read-only { cursor: default; outline: none; }
 
@@ -381,6 +370,7 @@
             setDocHeight();
             window.addEventListener('resize', setDocHeight);
 
+            // [修正3] 啟動時立刻抓取，不等待 60 秒
             if(GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.length > 10) {
                 fetchGoogleSheetData();
                 setInterval(fetchGoogleSheetData, 60000);
@@ -390,7 +380,7 @@
             
             updateClock();
             setInterval(updateClock, 1000);
-            // init 時不呼叫 renderUI，等待資料抓取
+            renderUI();
             
             const savedRole = localStorage.getItem('role');
             if(savedRole) authSuccess(savedRole);
@@ -406,7 +396,7 @@
             document.getElementById('timeDisplay').textContent = now.toLocaleTimeString('zh-TW', { hour12: false });
             document.getElementById('dateDisplay').textContent = now.toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'long' });
             
-            checkScheduleMode(now);
+            if (!isForceMode) checkScheduleMode(now);
             if (currentUserRole === 'student') checkStudentAlerts(now);
             
             renderScheduleColor(now);
@@ -417,7 +407,6 @@
             const msgBox = document.getElementById('overlayMessage');
             let activeAlert = null; 
 
-            // [修正] 所有提醒統一使用黃底黑字 (style-warning)
             // 1. 打掃
             if(appData.schedule.length > 0) {
                 const lastItem = appData.schedule[appData.schedule.length - 1];
@@ -450,7 +439,7 @@
                 }
             }
 
-            // 3. 自習提醒
+            // 3. 自習提醒 (文字微調)
             if(!activeAlert) {
                 const nowMinutes = now.getHours() * 60 + now.getMinutes();
                 const isSelfStudy = appData.schedule.some(item => {
@@ -465,7 +454,8 @@
                     const m = now.getMinutes();
                     const s = now.getSeconds();
                     if (m % 10 === 0 && s < 30) {
-                        activeAlert = { type: 'warning', text: '<h1>請保持安靜<br>打起精神<br>專心看書！</h1>', blink: false, size: 'h-50' };
+                        // [修正2] 拿掉驚嘆號
+                        activeAlert = { type: 'warning', text: '<h1>請保持安靜<br>打起精神<br>專心看書</h1>', blink: false, size: 'h-50' };
                     }
                 }
             }
@@ -509,7 +499,6 @@
             const colRight = document.getElementById('colRight');
             const scheduleCard = document.getElementById('scheduleCard');
 
-            // [修正] 模式切換邏輯：優先判斷是否為手動模式
             let targetMode = 'mode-study';
             if (isForceMode) {
                 targetMode = 'mode-exam';
@@ -522,7 +511,6 @@
                 badge.textContent = "自動模式 (自習/下課)";
             }
 
-            // 執行版面切換
             if (targetMode === 'mode-exam') {
                 if(!body.classList.contains('mode-exam')) {
                     body.classList.remove('mode-study');
@@ -531,7 +519,7 @@
                     colRight.appendChild(infoCard); 
                     infoCard.style.display = 'flex'; infoCard.style.height = '100%'; 
                 }
-                if(isExamining) handleCountdown(remainingSec); // 只有真的在考試時間才倒數
+                if(isExamining) handleCountdown(remainingSec); 
             } else {
                 if(!body.classList.contains('mode-study')) {
                     body.classList.remove('mode-exam');
@@ -556,7 +544,6 @@
                 area.style.display = 'block';
                 const mins = Math.ceil(remainingSec / 60);
                 
-                // [修正] Hurry 圖片在倒數 2 分鐘時出現並滿版
                 if (currentUserRole === 'student') {
                     if (remainingSec <= 120) {
                         imgContainer.style.display = 'flex';
@@ -666,6 +653,7 @@
         function toggleForceMode() {
             isForceMode = !isForceMode;
             checkScheduleMode(new Date());
+            document.getElementById('currentModeBadge').textContent = isForceMode ? "手動模式" : "自動模式";
         }
 
         function renderUI() {
@@ -743,7 +731,7 @@
                     appData.announcement = parsed.announcement;
                 }
             }
-            renderUI(); // 本地載入也要 render
+            renderUI();
         }
 
         function fetchGoogleSheetData() {
