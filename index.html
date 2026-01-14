@@ -16,6 +16,7 @@
             --warning-yellow: #F4D35E; 
             --sync-on: #27ae60; 
             --sync-off: #c0392b; 
+            --view-student: #3498db; /* 學生視角按鈕色 */
         }
 
         * { box-sizing: border-box; }
@@ -39,6 +40,19 @@
         }
         #loginOverlay.hidden { opacity: 0; pointer-events: none; }
         
+        /* [新增] 安全驗證遮罩 (15秒自動關閉) */
+        #authModal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 7000; justify-content: center; align-items: center;
+        }
+        .auth-box {
+            background: white; padding: 25px; border-radius: 12px; text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3); width: 300px;
+            animation: popIn 0.3s ease;
+        }
+        .auth-box h3 { margin-top: 0; color: var(--primary-color); }
+        .auth-timer { font-size: 0.9rem; color: var(--danger-color); margin-bottom: 10px; }
+        
         /* 學生通知遮罩 */
         #studentOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -61,13 +75,13 @@
         .h-50 { height: 50vh; }
         .blink-effect { animation: blink-text 0.8s infinite; }
 
-        .login-box input {
-            padding: 15px; font-size: 28px; text-align: center;
-            border: 2px solid var(--primary-color); border-radius: 12px;
-            outline: none; width: 300px; letter-spacing: 2px;
+        .login-box input, .auth-box input {
+            padding: 10px; font-size: 20px; text-align: center;
+            border: 2px solid var(--primary-color); border-radius: 8px;
+            outline: none; width: 100%; letter-spacing: 2px; margin-bottom: 15px;
         }
         .login-btn {
-            margin-top: 20px; padding: 10px 30px; font-size: 18px;
+            margin-top: 10px; padding: 10px 30px; font-size: 18px;
             background: var(--primary-color); color: white; border: none;
             border-radius: 8px; cursor: pointer;
         }
@@ -106,25 +120,22 @@
             flex-shrink: 0;
         }
 
-        /* 按鈕基礎樣式 */
         .btn { padding: 3px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
-        /* 編輯按鈕 (灰色) */
         .btn-edit { background: #eee; color: #555; }
-        /* 儲存/確定按鈕 (綠色) */
         .btn-save { background: var(--primary-color); color: white; }
-        /* 登出按鈕 (紅色，獨立樣式) */
         .btn-logout { background: #e74c3c; color: white; }
         
-        /* 同步控制按鈕 (僅 Admin 可見) */
         .btn-sync { background: var(--sync-on); color: white; min-width: 80px; }
         .btn-sync.paused { background: var(--sync-off); animation: pulse-red 2s infinite; }
+        
+        /* [新增] 學生視角按鈕 */
+        .btn-view { background: var(--view-student); color: white; min-width: 80px; }
+        .btn-view.active { border: 2px solid #2980b9; box-shadow: inset 0 0 5px rgba(0,0,0,0.3); }
 
-        /* Admin Only: 預設隱藏，只有 role-admin 才顯示 */
         .admin-only { display: none !important; }
         body.role-admin .admin-only { display: inline-block !important; }
-
-        /* Student Only: 學生模式下強制隱藏特定編輯按鈕 */
-        body.role-student .btn-edit { display: none !important; }
+        /* [修正] 學生模式強制隱藏「編輯文字」按鈕，但保留 Header 的切換按鈕 */
+        body.role-student .card-header .btn-edit { display: none !important; }
 
         #clockCard { 
             justify-content: center; align-items: center; text-align: center;
@@ -183,9 +194,8 @@
         
         .att-bottom-row { display: flex; justify-content: center; align-items: center; width: 100%; height: 50%; gap: 10px; }
         .input-wrapper { display: flex; align-items: center; gap: 5px; flex: 1; max-width: 600px; }
-        #absentVal { flex: 1; text-align: left; padding-left: 15px; font-size: 1.4rem; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px; height: 45px; }
-        
-        .btn-picker { background: #F2CC8F; color: #333; font-weight: bold; height: 45px; padding: 0 15px; border-radius: 8px; border: none; cursor: pointer; font-size: 1rem; white-space: nowrap; display: none; }
+        #absentVal { flex: 1; text-align: left; padding-left: 15px; font-size: 1.4rem; background: rgba(255,255,255,0.2); border: 2px dashed rgba(255,255,255,0.6); color: white; border-radius: 8px; height: 45px; cursor: pointer; transition: background 0.3s; }
+        #absentVal:hover { background: rgba(255,255,255,0.3); }
         .signature { position: absolute; bottom: 5px; right: 10px; font-size: 0.9rem; color: rgba(255,255,255,0.8); font-weight: normal; letter-spacing: 1px; }
 
         #seatModal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 6000; justify-content: center; align-items: center; }
@@ -194,16 +204,8 @@
             max-height: 95vh; display: flex; flex-direction: column; 
         }
         .seat-header { display: flex; justify-content: center; margin-bottom: 10px; color: var(--primary-color); font-size: 1.2rem; font-weight: bold; }
-        
-        .seat-grid { 
-            display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin: 0; 
-            flex: 1; overflow-y: auto; 
-        }
-        .seat-btn { 
-            aspect-ratio: 1.2; display: flex; justify-content: center; align-items: center;
-            font-size: 1.1rem; border-radius: 6px; border: 1px solid #ddd; 
-            background: white; cursor: pointer; color: #333; 
-        }
+        .seat-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin: 0; flex: 1; overflow-y: auto; }
+        .seat-btn { aspect-ratio: 1.2; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; border-radius: 6px; border: 1px solid #ddd; background: white; cursor: pointer; color: #333; }
         .seat-btn.selected { background: var(--danger-color); color: white; border-color: var(--danger-color); }
         .seat-footer { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
         .btn-clear { background: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
@@ -250,6 +252,18 @@
         </div>
     </div>
 
+    <div id="authModal">
+        <div class="auth-box">
+            <h3>權限驗證</h3>
+            <div id="authTimer" class="auth-timer">15 秒後關閉</div>
+            <input type="password" id="authInput" placeholder="請輸入密碼">
+            <div>
+                <button class="btn btn-save" onclick="verifyAuth()">確定</button>
+                <button class="btn btn-edit" onclick="closeAuthModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
     <div id="studentOverlay">
         <div class="overlay-message" id="overlayMessage"></div>
     </div>
@@ -261,8 +275,13 @@
         </div>
         <div class="controls">
             <span id="currentModeBadge" class="status-badge">載入中...</span>
-            <button id="btnSyncToggle" class="btn btn-sync admin-only" onclick="toggleSync()">連線中</button>
-            <button class="btn btn-edit admin-only" onclick="toggleForceMode()">強制切換模式</button>
+            
+            <button id="btnSyncToggle" class="btn btn-sync admin-only" onclick="tryAction('sync')">連線中</button>
+            
+            <button id="btnStudentView" class="btn btn-view admin-only" onclick="toggleStudentView()">👁️ 學生視角</button>
+            
+            <button class="btn btn-edit" onclick="tryAction('forceMode')">強制切換模式</button>
+            
             <button class="btn btn-logout" onclick="logout()">登出</button>
         </div>
     </header>
@@ -324,8 +343,7 @@
         <div class="att-bottom-row">
             <span class="att-label">缺席座號</span>
             <div class="input-wrapper">
-                <input type="text" id="absentVal" class="att-val" placeholder="無" readonly>
-                <button class="btn-picker" onclick="openSeatPicker()">選號</button>
+                <input type="text" id="absentVal" class="att-val" placeholder="無" readonly onclick="openSeatPicker()">
             </div>
         </div>
         <div class="signature">大安高工陳吳煜老師製</div>
@@ -358,19 +376,31 @@
     </div>
 
     <script>
-        // ================= 使用者設定區 (User Config) =================
         const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQACAdB7m2Bb2uYz7aIHU5TdXo5254vD0lpaKBkkyw621OEPW0hzHMdcFa5isuUDotgbFq7GRFghl9c/pub?output=csv";
         
-        // [設定] 請在此處修改密碼
+        // ================= [參數設定] =================
         const PASSWORDS = { 
-            ADMIN: '1005',   // 老師 (管理者)
-            STUDENT: '1630'  // 學生/監考
+            ADMIN: '1005',   // 老師 (管理者) 驗證碼
+            STUDENT: '1630'  // 學生/監考 驗證碼
         };
-        // ============================================================
+
+        const ALERT_SETTINGS = {
+            PRE_EXAM_SEC: 180, // [設定] 考前預備鐘出現秒數
+            BLINK_SEC: 60,     // [設定] 預備鐘閃爍秒數
+            HURRY_IMG_SEC: 120,// [設定] Hurry圖片出現倒數秒數
+            CLEAN_DURATION: 10,// [設定] 打掃畫面持續分鐘數
+            TEXT_PRE_EXAM: '<h1>即將開始考試<br>請儘速就座！</h1>', 
+            TEXT_CLEAN: '<h1>請開始進行<br>打掃工作</h1>',         
+            TEXT_SILENCE: '<h1>請保持安靜<br>打起精神<br>專心看書</h1>'
+        };
+        // ============================================
 
         let currentUserRole = null;
         let isForceMode = false;
         let isSyncPaused = false;
+        let isStudentView = false; // [新增] 學生視角旗標
+        let authTimerId = null;    // 驗證視窗倒數計時器
+        let pendingAction = null;  // 待執行的動作
         
         const DEFAULT_ANNOUNCEMENT = `考試期間請遵守以下規定：
 1. 請將手機及智慧型穿戴裝置關機並放置於手機袋。
@@ -415,23 +445,92 @@
             document.body.style.height = `calc(var(--vh, 1vh) * 100)`;
         }
 
-        // [修改] 暫停同步需驗證密碼
-        function toggleSync() {
-            const input = prompt("請輸入管理者密碼以變更連線狀態：");
-            if (input === PASSWORDS.ADMIN) {
-                isSyncPaused = !isSyncPaused;
-                const btn = document.getElementById('btnSyncToggle');
-                if(isSyncPaused) {
-                    btn.textContent = "已暫停";
-                    btn.classList.add('paused');
-                } else {
-                    btn.textContent = "連線中";
-                    btn.classList.remove('paused');
-                    fetchGoogleSheetData();
-                }
-            } else {
-                alert("密碼錯誤，無法變更狀態");
+        // === [新增] 通用驗證與動作處理 ===
+        function tryAction(action) {
+            // 老師切換強制模式：不需密碼
+            if (action === 'forceMode' && currentUserRole === 'admin') {
+                toggleForceMode();
+                return;
             }
+
+            // 其他情況需驗證
+            pendingAction = action;
+            openAuthModal();
+        }
+
+        function openAuthModal() {
+            const modal = document.getElementById('authModal');
+            const timerDisplay = document.getElementById('authTimer');
+            const input = document.getElementById('authInput');
+            
+            modal.style.display = 'flex';
+            input.value = '';
+            input.focus();
+            
+            let timeLeft = 15;
+            timerDisplay.textContent = `${timeLeft} 秒後關閉`;
+            
+            if(authTimerId) clearInterval(authTimerId);
+            authTimerId = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `${timeLeft} 秒後關閉`;
+                if(timeLeft <= 0) {
+                    closeAuthModal();
+                }
+            }, 1000);
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').style.display = 'none';
+            if(authTimerId) clearInterval(authTimerId);
+            pendingAction = null;
+        }
+
+        function verifyAuth() {
+            const val = document.getElementById('authInput').value;
+            let expectedPass = '';
+            
+            // 判斷需要哪個密碼
+            if (pendingAction === 'sync') expectedPass = PASSWORDS.ADMIN;
+            else if (pendingAction === 'forceMode') expectedPass = PASSWORDS.STUDENT; // 學生切換強制模式需驗證
+            
+            if (val === expectedPass) {
+                if (pendingAction === 'sync') toggleSync();
+                else if (pendingAction === 'forceMode') toggleForceMode();
+                closeAuthModal();
+            } else {
+                alert("密碼錯誤");
+                document.getElementById('authInput').value = '';
+            }
+        }
+
+        function toggleSync() {
+            isSyncPaused = !isSyncPaused;
+            const btn = document.getElementById('btnSyncToggle');
+            if(isSyncPaused) {
+                btn.textContent = "已暫停";
+                btn.classList.add('paused');
+            } else {
+                btn.textContent = "連線中";
+                btn.classList.remove('paused');
+                fetchGoogleSheetData();
+            }
+        }
+
+        function toggleStudentView() {
+            isStudentView = !isStudentView;
+            const btn = document.getElementById('btnStudentView');
+            if(isStudentView) {
+                btn.textContent = "退出演示";
+                btn.classList.add('active');
+            } else {
+                btn.textContent = "👁️ 學生視角";
+                btn.classList.remove('active');
+            }
+            // 立即刷新效果
+            const now = new Date();
+            checkStudentAlerts(now);
+            checkScheduleMode(now);
         }
 
         function updateClock() {
@@ -440,7 +539,8 @@
             document.getElementById('dateDisplay').textContent = now.toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'long' });
             
             if (!isForceMode) checkScheduleMode(now);
-            if (currentUserRole === 'student') checkStudentAlerts(now);
+            // [修正] 判斷是否為學生 或 開啟了學生視角
+            if (currentUserRole === 'student' || isStudentView) checkStudentAlerts(now);
             
             renderScheduleColor(now);
         }
@@ -454,8 +554,8 @@
                 const lastItem = appData.schedule[appData.schedule.length - 1];
                 const [eH, eM] = lastItem.end.split(':').map(Number);
                 const endTime = new Date(); endTime.setHours(eH, eM, 0);
-                if(now >= endTime && now < new Date(endTime.getTime() + 10*60000)) {
-                    activeAlert = { type: 'warning', text: '<h1>請開始進行<br>打掃工作</h1>', blink: false, size: 'h-50' };
+                if(now >= endTime && now < new Date(endTime.getTime() + ALERT_SETTINGS.CLEAN_DURATION*60000)) {
+                    activeAlert = { type: 'warning', text: ALERT_SETTINGS.TEXT_CLEAN, blink: false, size: 'h-50' };
                 }
             }
 
@@ -466,15 +566,14 @@
                     const startTime = new Date(); startTime.setHours(sH, sM, 0);
                     const diffSec = (startTime - now) / 1000;
 
-                    if(diffSec > 0 && diffSec <= 180) { 
-                        let text = '<h1>即將開始考試<br>請儘速就座！</h1>';
+                    if(diffSec > 0 && diffSec <= ALERT_SETTINGS.PRE_EXAM_SEC) { 
                         let blink = false;
                         let size = 'h-33'; 
-                        if(diffSec <= 60) { 
+                        if(diffSec <= ALERT_SETTINGS.BLINK_SEC) { 
                             blink = true;
                             size = 'h-50';
                         }
-                        activeAlert = { type: 'warning', text: text, blink: blink, size: size };
+                        activeAlert = { type: 'warning', text: ALERT_SETTINGS.TEXT_PRE_EXAM, blink: blink, size: size };
                         break;
                     }
                 }
@@ -494,7 +593,7 @@
                     const m = now.getMinutes();
                     const s = now.getSeconds();
                     if (m % 10 === 0 && s < 30) {
-                        activeAlert = { type: 'warning', text: '<h1>請保持安靜<br>打起精神<br>專心看書</h1>', blink: false, size: 'h-50' };
+                        activeAlert = { type: 'warning', text: ALERT_SETTINGS.TEXT_SILENCE, blink: false, size: 'h-50' };
                     }
                 }
             }
@@ -583,8 +682,9 @@
                 area.style.display = 'block';
                 const mins = Math.ceil(remainingSec / 60);
                 
-                if (currentUserRole === 'student') {
-                    if (remainingSec <= 120) {
+                // [修正] 學生身份 OR 學生視角開啟時顯示圖片
+                if (currentUserRole === 'student' || isStudentView) {
+                    if (remainingSec <= ALERT_SETTINGS.HURRY_IMG_SEC) {
                         imgContainer.style.display = 'flex';
                         imgContainer.classList.add('expanded'); 
                     } else {
@@ -684,12 +784,12 @@
             document.getElementById('loginOverlay').classList.add('hidden');
             document.body.classList.remove('role-admin', 'role-student');
             document.body.classList.add(`role-${role}`);
-            // 解除應到人數鎖定 (對所有人開放，或依需求調整)
             document.getElementById('shouldVal').removeAttribute('readonly'); 
         }
 
         function logout() { localStorage.removeItem('role'); location.reload(); }
         
+        // 老師手動切換不需驗證，驗證邏輯已移至 tryAction
         function toggleForceMode() {
             isForceMode = !isForceMode;
             checkScheduleMode(new Date());
