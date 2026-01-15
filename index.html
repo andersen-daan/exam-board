@@ -139,11 +139,7 @@
             justify-content: center; align-items: center; text-align: center;
             flex-shrink: 0; position: relative; min-height: 120px;
         }
-        /* [修正] 不顯示秒數，字體樣式微調 */
-        #timeDisplay { 
-            font-family: 'Courier New', monospace; font-weight: bold; 
-            color: var(--clock-color); line-height: 1; white-space: nowrap;
-        }
+        #timeDisplay { font-family: 'Courier New', monospace; font-weight: bold; color: var(--clock-color); line-height: 1; white-space: nowrap; }
         #dateDisplay { font-size: 1.8rem; font-weight: bold; margin-top: 5px; color: var(--primary-color); }
         #timeDisclaimer { position: absolute; bottom: 5px; right: 10px; font-size: 1rem; color: #444; display: none; font-weight: bold; text-align: right; }
 
@@ -258,7 +254,7 @@
         <div class="auth-box">
             <h3>權限驗證</h3>
             <div id="authTimer" class="auth-timer">15 秒後關閉</div>
-            <input type="password" id="authInput" placeholder="請輸入密碼">
+            <input type="password" id="authInput" placeholder="請輸入密碼" onkeyup="if(event.key==='Enter') verifyAuth()">
             <div>
                 <button class="btn btn-save" onclick="verifyAuth()">確定</button>
                 <button class="btn btn-edit" onclick="closeAuthModal()">取消</button>
@@ -287,7 +283,8 @@
     <div id="mainContainer">
         <div class="left-column" id="colLeft">
             <div class="card" id="clockCard">
-                <div id="timeDisplay">00:00</div> <div id="dateDisplay">--月--日 星期--</div>
+                <div id="timeDisplay">00:00</div>
+                <div id="dateDisplay">--月--日 星期--</div>
                 <div id="timeDisclaimer">以上網路時間僅供參考，請同學仍應依學校鐘聲為準。</div>
                 <div id="countdownArea">
                     <span id="countdownText">倒數 5 分鐘</span>
@@ -375,29 +372,28 @@
     <script>
         const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQACAdB7m2Bb2uYz7aIHU5TdXo5254vD0lpaKBkkyw621OEPW0hzHMdcFa5isuUDotgbFq7GRFghl9c/pub?output=csv";
         
-        // ================= [參數設定] =================
         const PASSWORDS = { 
-            ADMIN: '1005',   // 老師驗證碼
-            STUDENT: '1630'  // 學生驗證碼
+            ADMIN: '1005',   
+            STUDENT: '1630'  
         };
 
         const ALERT_SETTINGS = {
-            PRE_EXAM_SEC: 180, // 考前預備鐘出現秒數
-            BLINK_SEC: 60,     // 預備鐘閃爍秒數
-            HURRY_IMG_SEC: 120,// Hurry圖片出現倒數秒數
-            CLEAN_DURATION: 10,// 打掃畫面持續分鐘數
+            PRE_EXAM_SEC: 180, 
+            BLINK_SEC: 60,     
+            HURRY_IMG_SEC: 120,
+            CLEAN_DURATION: 10,
             TEXT_PRE_EXAM: '<h1>即將開始考試<br>請儘速就座！</h1>', 
             TEXT_CLEAN: '<h1>請開始進行<br>打掃工作</h1>',         
             TEXT_SILENCE: '<h1>請保持安靜<br>打起精神<br>專心看書</h1>'
         };
-        // ============================================
 
         let currentUserRole = null;
-        let isForceMode = false;
         let isSyncPaused = false;
         let isStudentView = false; 
         let authTimerId = null;    
         let pendingAction = null;  
+        // [修正] 改為三段式狀態: 'AUTO' | 'EXAM' | 'STUDY'
+        let forceStatus = 'AUTO';
         
         const DEFAULT_ANNOUNCEMENT = `考試期間請遵守以下規定：
 1. 請將手機及智慧型穿戴裝置關機並放置於手機袋。
@@ -518,23 +514,21 @@
             } else {
                 btn.textContent = "👁️ 學生視角";
                 btn.classList.remove('active');
-                // [修正] 退出學生視角時，強制清除可能的學生通知遮罩
                 document.getElementById('studentOverlay').className = '';
             }
             const now = new Date();
-            if(isStudentView) checkStudentAlerts(now); // 如果進入學生視角才要檢查
+            if(isStudentView) checkStudentAlerts(now); 
             checkScheduleMode(now);
         }
 
         function updateClock() {
             const now = new Date();
-            // [修正] 不顯示秒數，只顯示 HH:MM
             document.getElementById('timeDisplay').textContent = now.toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' });
             document.getElementById('dateDisplay').textContent = now.toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'long' });
             
-            if (!isForceMode) checkScheduleMode(now);
+            // 始終檢查模式 (forceStatus 會在內部處理)
+            checkScheduleMode(now);
             
-            // [修正] 邏輯修正：如果是學生 或 開啟視角，檢查通知；否則強制清除通知
             if (currentUserRole === 'student' || isStudentView) {
                 checkStudentAlerts(now);
             } else {
@@ -636,17 +630,28 @@
             const colRight = document.getElementById('colRight');
             const scheduleCard = document.getElementById('scheduleCard');
 
+            // [修正] 三段式狀態切換邏輯
             let targetMode = 'mode-study';
-            if (isForceMode) {
+            let badgeText = "";
+
+            if (forceStatus === 'EXAM') {
                 targetMode = 'mode-exam';
-                badge.textContent = "手動模式 (考試版面)";
-            } else if (isExamining) {
-                targetMode = 'mode-exam';
-                badge.textContent = `考試中：${currentSubject}`;
-            } else {
+                badgeText = "手動模式 (強制考試)";
+            } else if (forceStatus === 'STUDY') {
                 targetMode = 'mode-study';
-                badge.textContent = "自動模式 (自習/下課)";
+                badgeText = "手動模式 (強制自習)";
+            } else {
+                // AUTO
+                if (isExamining) {
+                    targetMode = 'mode-exam';
+                    badgeText = `考試中：${currentSubject}`;
+                } else {
+                    targetMode = 'mode-study';
+                    badgeText = "自動模式 (自習/下課)";
+                }
             }
+            
+            badge.textContent = badgeText;
 
             if (targetMode === 'mode-exam') {
                 if(!body.classList.contains('mode-exam')) {
@@ -656,6 +661,7 @@
                     colRight.appendChild(infoCard); 
                     infoCard.style.display = 'flex'; infoCard.style.height = '100%'; 
                 }
+                // 只有真的在考試時間，才計算倒數，否則不倒數
                 if(isExamining) handleCountdown(remainingSec); 
             } else {
                 if(!body.classList.contains('mode-study')) {
@@ -785,12 +791,21 @@
             document.getElementById('shouldVal').removeAttribute('readonly'); 
         }
 
-        function logout() { localStorage.removeItem('role'); location.reload(); }
+        function logout() { 
+            // [修正] 學生登出需確認
+            if(currentUserRole === 'student') {
+                if(!confirm("確定要登出嗎？")) return;
+            }
+            localStorage.removeItem('role'); location.reload(); 
+        }
         
+        // [修正] 三段式切換: AUTO -> EXAM -> STUDY -> AUTO
         function toggleForceMode() {
-            isForceMode = !isForceMode;
+            if (forceStatus === 'AUTO') forceStatus = 'EXAM';
+            else if (forceStatus === 'EXAM') forceStatus = 'STUDY';
+            else forceStatus = 'AUTO';
+            
             checkScheduleMode(new Date());
-            document.getElementById('currentModeBadge').textContent = isForceMode ? "手動模式" : "自動模式";
         }
 
         function renderUI() {
