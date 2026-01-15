@@ -40,19 +40,28 @@
         }
         #loginOverlay.hidden { opacity: 0; pointer-events: none; }
         
-        /* 驗證視窗 */
-        #authModal {
+        /* 驗證視窗 & 模式選擇視窗 (共用樣式) */
+        #authModal, #modeSelectionModal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5); z-index: 7000; justify-content: center; align-items: center;
         }
-        .auth-box {
+        .modal-box {
             background: white; padding: 25px; border-radius: 12px; text-align: center;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3); width: 300px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3); width: 320px;
             animation: popIn 0.3s ease;
         }
-        .auth-box h3 { margin-top: 0; color: var(--primary-color); }
+        .modal-box h3 { margin-top: 0; color: var(--primary-color); margin-bottom: 15px;}
         .auth-timer { font-size: 0.9rem; color: var(--danger-color); margin-bottom: 10px; }
         
+        /* 模式選擇按鈕群 */
+        .mode-btn-group { display: flex; flex-direction: column; gap: 10px; }
+        .btn-mode-select { 
+            padding: 12px; font-size: 1.1rem; border: 1px solid #ddd; border-radius: 8px; 
+            background: #f8f9fa; cursor: pointer; transition: background 0.2s;
+        }
+        .btn-mode-select:hover { background: #e2e6ea; }
+        .btn-mode-select.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+
         /* 學生通知遮罩 */
         #studentOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -75,7 +84,7 @@
         .h-50 { height: 50vh; }
         .blink-effect { animation: blink-text 0.8s infinite; }
 
-        .login-box input, .auth-box input {
+        .login-box input, .modal-box input {
             padding: 10px; font-size: 20px; text-align: center;
             border: 2px solid var(--primary-color); border-radius: 8px;
             outline: none; width: 100%; letter-spacing: 2px; margin-bottom: 15px;
@@ -251,13 +260,27 @@
     </div>
 
     <div id="authModal">
-        <div class="auth-box">
+        <div class="modal-box auth-box">
             <h3>權限驗證</h3>
             <div id="authTimer" class="auth-timer">15 秒後關閉</div>
             <input type="password" id="authInput" placeholder="請輸入密碼" onkeyup="if(event.key==='Enter') verifyAuth()">
             <div>
                 <button class="btn btn-save" onclick="verifyAuth()">確定</button>
                 <button class="btn btn-edit" onclick="closeAuthModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modeSelectionModal">
+        <div class="modal-box">
+            <h3>選擇版面模式</h3>
+            <div class="mode-btn-group">
+                <button class="btn-mode-select" onclick="setForceMode('AUTO')">恢復自動模式 (依時間)</button>
+                <button class="btn-mode-select" onclick="setForceMode('EXAM')">強制切換：考試版面</button>
+                <button class="btn-mode-select" onclick="setForceMode('STUDY')">強制切換：自習版面</button>
+            </div>
+            <div style="margin-top:15px;">
+                <button class="btn btn-edit" onclick="closeModeModal()">取消</button>
             </div>
         </div>
     </div>
@@ -372,12 +395,11 @@
     <script>
         // ================= 【參數設定區】 =================
         const SYSTEM_CONFIG = {
-            // Google Sheet CSV 網址 (請保持這個格式)
+            // [設定] Google Sheet CSV 網址
             GOOGLE_SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQACAdB7m2Bb2uYz7aIHU5TdXo5254vD0lpaKBkkyw621OEPW0hzHMdcFa5isuUDotgbFq7GRFghl9c/pub?output=csv",
             
-            // 資料更新間隔 (毫秒)，預設 20000 = 20秒
-            // 注意：Google Sheets 本身有 3-5 分鐘快取，設太短也無法強制更新
-            UPDATE_INTERVAL: 20000
+            // [設定] 資料更新間隔 (毫秒)，預設 60000 = 60秒
+            UPDATE_INTERVAL: 60000
         };
 
         const PASSWORDS = { 
@@ -386,10 +408,10 @@
         };
 
         const ALERT_SETTINGS = {
-            PRE_EXAM_SEC: 180, // 預備鐘出現秒數
-            BLINK_SEC: 60,     // 預備鐘閃爍秒數
-            HURRY_IMG_SEC: 120,// Hurry圖片出現倒數秒數
-            CLEAN_DURATION: 10,// 打掃畫面持續分鐘數
+            PRE_EXAM_SEC: 180, // [設定] 考前預備鐘出現秒數
+            BLINK_SEC: 60,     // [設定] 預備鐘閃爍秒數
+            HURRY_IMG_SEC: 180,// [設定] Hurry圖片出現倒數秒數 (同步進度條)
+            CLEAN_DURATION: 10,// [設定] 打掃畫面持續分鐘數
             TEXT_PRE_EXAM: '<h1>即將開始考試<br>請儘速就座！</h1>', 
             TEXT_CLEAN: '<h1>請開始進行<br>打掃工作</h1>',         
             TEXT_SILENCE: '<h1>請保持安靜<br>打起精神<br>專心看書</h1>'
@@ -447,9 +469,11 @@
             document.body.style.height = `calc(var(--vh, 1vh) * 100)`;
         }
 
+        // === 驗證與權限 ===
         function tryAction(action) {
+            // 若為老師要切換強制模式 -> 不需驗證，直接開選單
             if (action === 'forceMode' && currentUserRole === 'admin') {
-                toggleForceMode();
+                openModeSelection();
                 return;
             }
             pendingAction = action;
@@ -493,12 +517,25 @@
             
             if (val === expectedPass) {
                 if (pendingAction === 'sync') toggleSync();
-                else if (pendingAction === 'forceMode') toggleForceMode();
+                else if (pendingAction === 'forceMode') openModeSelection(); // [修改] 驗證成功後開選單
                 closeAuthModal();
             } else {
                 alert("密碼錯誤");
                 document.getElementById('authInput').value = '';
             }
+        }
+
+        // === [新增] 模式選擇選單 ===
+        function openModeSelection() {
+            document.getElementById('modeSelectionModal').style.display = 'flex';
+        }
+        function closeModeModal() {
+            document.getElementById('modeSelectionModal').style.display = 'none';
+        }
+        function setForceMode(mode) {
+            forceStatus = mode;
+            closeModeModal();
+            checkScheduleMode(new Date()); // 立即生效
         }
 
         function toggleSync() {
@@ -514,6 +551,14 @@
             }
         }
 
+        // === [修正] 重置學生特效 ===
+        function resetStudentEffects() {
+            document.getElementById('studentOverlay').className = '';
+            const imgContainer = document.getElementById('hurryImageContainer');
+            imgContainer.style.display = 'none';
+            imgContainer.classList.remove('expanded');
+        }
+
         function toggleStudentView() {
             isStudentView = !isStudentView;
             const btn = document.getElementById('btnStudentView');
@@ -523,7 +568,7 @@
             } else {
                 btn.textContent = "👁️ 學生視角";
                 btn.classList.remove('active');
-                document.getElementById('studentOverlay').className = '';
+                resetStudentEffects(); // [修正] 退出時強制清除特效
             }
             const now = new Date();
             if(isStudentView) checkStudentAlerts(now); 
@@ -540,7 +585,7 @@
             if (currentUserRole === 'student' || isStudentView) {
                 checkStudentAlerts(now);
             } else {
-                document.getElementById('studentOverlay').className = '';
+                resetStudentEffects(); // 老師模式下確保乾淨
             }
             
             renderScheduleColor(now);
@@ -551,6 +596,7 @@
             const msgBox = document.getElementById('overlayMessage');
             let activeAlert = null; 
 
+            // 1. 打掃
             if(appData.schedule.length > 0) {
                 const lastItem = appData.schedule[appData.schedule.length - 1];
                 const [eH, eM] = lastItem.end.split(':').map(Number);
@@ -560,6 +606,7 @@
                 }
             }
 
+            // 2. 預備鐘
             if(!activeAlert) {
                 for(let item of appData.schedule) {
                     if(item.subject === '自習' || item.subject === '午休') continue;
@@ -580,6 +627,7 @@
                 }
             }
 
+            // 3. 自習提醒
             if(!activeAlert) {
                 const nowMinutes = now.getHours() * 60 + now.getMinutes();
                 const isSelfStudy = appData.schedule.some(item => {
@@ -641,6 +689,7 @@
             let targetMode = 'mode-study';
             let badgeText = "";
 
+            // [修正] 選單式狀態判斷
             if (forceStatus === 'EXAM') {
                 targetMode = 'mode-exam';
                 badgeText = "手動模式 (強制考試)";
@@ -659,7 +708,7 @@
             }
             
             badge.textContent = badgeText;
-            isForceMode = (forceStatus !== 'AUTO'); // 維持相容性
+            isForceMode = (forceStatus !== 'AUTO');
 
             if (targetMode === 'mode-exam') {
                 if(!body.classList.contains('mode-exam')) {
@@ -805,14 +854,6 @@
             localStorage.removeItem('role'); location.reload(); 
         }
         
-        function toggleForceMode() {
-            if (forceStatus === 'AUTO') forceStatus = 'EXAM';
-            else if (forceStatus === 'EXAM') forceStatus = 'STUDY';
-            else forceStatus = 'AUTO';
-            
-            checkScheduleMode(new Date());
-        }
-
         function renderUI() {
             const tbody = document.getElementById('scheduleBody');
             tbody.innerHTML = '';
