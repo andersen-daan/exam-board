@@ -370,29 +370,38 @@
     </div>
 
     <script>
-        const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQACAdB7m2Bb2uYz7aIHU5TdXo5254vD0lpaKBkkyw621OEPW0hzHMdcFa5isuUDotgbFq7GRFghl9c/pub?output=csv";
-        
+        // ================= 【參數設定區】 =================
+        const SYSTEM_CONFIG = {
+            // Google Sheet CSV 網址 (請保持這個格式)
+            GOOGLE_SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQACAdB7m2Bb2uYz7aIHU5TdXo5254vD0lpaKBkkyw621OEPW0hzHMdcFa5isuUDotgbFq7GRFghl9c/pub?output=csv",
+            
+            // 資料更新間隔 (毫秒)，預設 20000 = 20秒
+            // 注意：Google Sheets 本身有 3-5 分鐘快取，設太短也無法強制更新
+            UPDATE_INTERVAL: 20000
+        };
+
         const PASSWORDS = { 
-            ADMIN: '1005',   
-            STUDENT: '1630'  
+            ADMIN: '1005',   // 老師/管理者驗證碼
+            STUDENT: '1630'  // 學生驗證碼
         };
 
         const ALERT_SETTINGS = {
-            PRE_EXAM_SEC: 180, 
-            BLINK_SEC: 60,     
-            HURRY_IMG_SEC: 120,
-            CLEAN_DURATION: 10,
+            PRE_EXAM_SEC: 180, // 預備鐘出現秒數
+            BLINK_SEC: 60,     // 預備鐘閃爍秒數
+            HURRY_IMG_SEC: 120,// Hurry圖片出現倒數秒數
+            CLEAN_DURATION: 10,// 打掃畫面持續分鐘數
             TEXT_PRE_EXAM: '<h1>即將開始考試<br>請儘速就座！</h1>', 
             TEXT_CLEAN: '<h1>請開始進行<br>打掃工作</h1>',         
             TEXT_SILENCE: '<h1>請保持安靜<br>打起精神<br>專心看書</h1>'
         };
+        // ============================================
 
         let currentUserRole = null;
+        let isForceMode = false;
         let isSyncPaused = false;
         let isStudentView = false; 
         let authTimerId = null;    
         let pendingAction = null;  
-        // [修正] 改為三段式狀態: 'AUTO' | 'EXAM' | 'STUDY'
         let forceStatus = 'AUTO';
         
         const DEFAULT_ANNOUNCEMENT = `考試期間請遵守以下規定：
@@ -416,11 +425,11 @@
             setDocHeight();
             window.addEventListener('resize', setDocHeight);
 
-            if(GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.length > 10) {
+            if(SYSTEM_CONFIG.GOOGLE_SHEET_CSV_URL && SYSTEM_CONFIG.GOOGLE_SHEET_CSV_URL.length > 10) {
                 fetchGoogleSheetData();
                 setInterval(() => {
                     if (!isSyncPaused) fetchGoogleSheetData();
-                }, 60000);
+                }, SYSTEM_CONFIG.UPDATE_INTERVAL);
             } else {
                 loadLocalData();
             }
@@ -526,7 +535,6 @@
             document.getElementById('timeDisplay').textContent = now.toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' });
             document.getElementById('dateDisplay').textContent = now.toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'long' });
             
-            // 始終檢查模式 (forceStatus 會在內部處理)
             checkScheduleMode(now);
             
             if (currentUserRole === 'student' || isStudentView) {
@@ -630,7 +638,6 @@
             const colRight = document.getElementById('colRight');
             const scheduleCard = document.getElementById('scheduleCard');
 
-            // [修正] 三段式狀態切換邏輯
             let targetMode = 'mode-study';
             let badgeText = "";
 
@@ -652,6 +659,7 @@
             }
             
             badge.textContent = badgeText;
+            isForceMode = (forceStatus !== 'AUTO'); // 維持相容性
 
             if (targetMode === 'mode-exam') {
                 if(!body.classList.contains('mode-exam')) {
@@ -661,7 +669,6 @@
                     colRight.appendChild(infoCard); 
                     infoCard.style.display = 'flex'; infoCard.style.height = '100%'; 
                 }
-                // 只有真的在考試時間，才計算倒數，否則不倒數
                 if(isExamining) handleCountdown(remainingSec); 
             } else {
                 if(!body.classList.contains('mode-study')) {
@@ -792,14 +799,12 @@
         }
 
         function logout() { 
-            // [修正] 學生登出需確認
             if(currentUserRole === 'student') {
                 if(!confirm("確定要登出嗎？")) return;
             }
             localStorage.removeItem('role'); location.reload(); 
         }
         
-        // [修正] 三段式切換: AUTO -> EXAM -> STUDY -> AUTO
         function toggleForceMode() {
             if (forceStatus === 'AUTO') forceStatus = 'EXAM';
             else if (forceStatus === 'EXAM') forceStatus = 'STUDY';
@@ -887,7 +892,7 @@
         }
 
         function fetchGoogleSheetData() {
-            const urlWithNoCache = GOOGLE_SHEET_CSV_URL + "&t=" + Date.now();
+            const urlWithNoCache = SYSTEM_CONFIG.GOOGLE_SHEET_CSV_URL + "&t=" + (Date.now() + Math.random());
             const statusLight = document.getElementById('syncStatus');
             fetch(urlWithNoCache, {cache: "no-store"})
             .then(response => response.text())
